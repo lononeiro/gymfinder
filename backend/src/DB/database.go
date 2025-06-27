@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
+var DataBase *gorm.DB
 
 func ConnectAndMigrate() {
 	dsn := config.LoadDSN()
@@ -22,12 +22,13 @@ func ConnectAndMigrate() {
 	// AutoMigrate faz as migrations dos models
 	err = database.AutoMigrate(
 		&model.Academia{},
+		&model.Usuario{},
 	)
 	if err != nil {
 		log.Fatal("migration failed:", err)
 	}
 
-	DB = database
+	DataBase = database
 
 	log.Println("Database connection successful and migrations ran!")
 }

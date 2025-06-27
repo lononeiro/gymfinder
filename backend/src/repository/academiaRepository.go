@@ -8,7 +8,7 @@ import (
 )
 
 func CreateAcademia(academia model.Academia) error {
-	err := DB.CreateAcademia(DB.DB, academia)
+	err := DB.CreateAcademia(DB.DataBase, academia)
 
 	if err != nil {
 		fmt.Println("Erro ao criar academia:", err)
@@ -17,7 +17,7 @@ func CreateAcademia(academia model.Academia) error {
 }
 
 func ListarAcademias() []model.Academia {
-	academias, err := DB.ListarAcademias(DB.DB)
+	academias, err := DB.ListarAcademias(DB.DataBase)
 	if err != nil {
 		fmt.Println("Erro ao listar academias:", err)
 		return []model.Academia{}
@@ -26,7 +26,7 @@ func ListarAcademias() []model.Academia {
 }
 
 func EditarAcademias(id uint, academia model.Academia) error {
-	existingAcademia, err := DB.SelecionarAcademiaPoriD(DB.DB, id)
+	existingAcademia, err := DB.SelecionarAcademiaPoriD(DB.DataBase, id)
 	if err != nil {
 		fmt.Println("Erro ao selecionar academia:", err)
 		return err
@@ -37,7 +37,7 @@ func EditarAcademias(id uint, academia model.Academia) error {
 	existingAcademia.Endereco = academia.Endereco
 	existingAcademia.Telefone = academia.Telefone
 
-	err = DB.EditarAcademias(DB.DB, id, existingAcademia)
+	err = DB.EditarAcademias(DB.DataBase, id, existingAcademia)
 	if err != nil {
 		fmt.Println("Erro ao editar academia:", err)
 		return err
@@ -46,7 +46,7 @@ func EditarAcademias(id uint, academia model.Academia) error {
 }
 
 func ApagarAcademia(id uint) error {
-	err := DB.ApagarAcademia(DB.DB, id)
+	err := DB.ApagarAcademia(DB.DataBase, id)
 	if err != nil {
 		fmt.Println("Erro ao apagar academia:", err)
 	}

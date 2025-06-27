@@ -7,7 +7,7 @@ import (
 
 	"github.com/lononeiro/gymfinder/backend/src/model"
 	"github.com/lononeiro/gymfinder/backend/src/repository"
-	"github.com/lononeiro/gymfinder/backend/src/scripts"
+	"github.com/lononeiro/gymfinder/backend/src/utils"
 )
 
 func AdicionarAcademia(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +45,7 @@ func EditarAcademias(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, ok := scripts.RetornarIdURL(w, r)
+	id, ok := utils.RetornarIdURL(w, r)
 	if !ok {
 		return
 	}
@@ -59,7 +59,7 @@ func EditarAcademias(w http.ResponseWriter, r *http.Request) {
 }
 func ApagarAcademia(w http.ResponseWriter, r *http.Request) {
 
-	id, ok := scripts.RetornarIdURL(w, r)
+	id, ok := utils.RetornarIdURL(w, r)
 	if !ok {
 		return
 	}

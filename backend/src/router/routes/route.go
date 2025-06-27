@@ -13,7 +13,7 @@ type Route struct {
 }
 
 func Configurar(r *mux.Router) *mux.Router {
-	rotas := AcademiaRoutes
+	rotas := append(AcademiaRoutes, UsuarioRoutes...)
 
 	for _, rota := range rotas {
 		r.HandleFunc(rota.URI, rota.Function).Methods(rota.Method)
