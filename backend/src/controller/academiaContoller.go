@@ -63,6 +63,7 @@ func ApagarAcademia(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+
 	err := repository.ApagarAcademia(id)
 	if err != nil {
 		http.Error(w, fmt.Sprintf(`{"error":"Erro ao apagar academia: %s"}`, err.Error()), http.StatusInternalServerError)

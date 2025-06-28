@@ -23,6 +23,7 @@ func ConnectAndMigrate() {
 	err = database.AutoMigrate(
 		&model.Academia{},
 		&model.Usuario{},
+		&model.Comentario{},
 	)
 	if err != nil {
 		log.Fatal("migration failed:", err)

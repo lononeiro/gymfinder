@@ -1,9 +1,8 @@
 package routes
 
 import (
-	"net/http"
-
 	"github.com/lononeiro/gymfinder/backend/src/controller"
+	"github.com/lononeiro/gymfinder/backend/src/utils"
 	"github.com/lononeiro/gymfinder/backend/src/utils/middleware"
 )
 
@@ -11,7 +10,7 @@ var AcademiaRoutes = []Route{
 	{
 		URI:      "/academia",
 		Method:   "POST",
-		Function: controller.AdicionarAcademia,
+		Function: applyMiddlewares(controller.AdicionarAcademia, utils.AuthMiddleware, middleware.AdminOnly),
 	},
 	{
 		URI:      "/academias",
@@ -19,15 +18,13 @@ var AcademiaRoutes = []Route{
 		Function: controller.ListarAcademias,
 	},
 	{
-		URI:      "/academia",
+		URI:      "/academia/{id}",
 		Method:   "PUT",
-		Function: controller.EditarAcademias,
+		Function: applyMiddlewares(controller.EditarAcademias, utils.AuthMiddleware, middleware.AdminOnly),
 	},
 	{
-		URI:    "/academia",
-		Method: "DELETE",
-		Function: func(w http.ResponseWriter, r *http.Request) {
-			middleware.AdminOnly(http.HandlerFunc(controller.ApagarAcademia)).ServeHTTP(w, r)
-		},
+		URI:      "/academia/{id}",
+		Method:   "DELETE",
+		Function: applyMiddlewares(controller.ApagarAcademia, utils.AuthMiddleware, middleware.AdminOnly),
 	},
 }

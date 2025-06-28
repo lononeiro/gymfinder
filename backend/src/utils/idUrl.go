@@ -1,23 +1,35 @@
 package utils
 
 import (
-	"fmt"
+	"encoding/json"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
-// Retorna o ID da URL ou responde erro JSON e retorna 0, false
 func RetornarIdURL(w http.ResponseWriter, r *http.Request) (uint, bool) {
-	idStr := r.URL.Query().Get("id")
+
+	vars := mux.Vars(r)
+
+	idStr := vars["id"]
+
 	if idStr == "" {
-		http.Error(w, `{"error":"ID não informado"}`, http.StatusBadRequest)
+		respondWithJSONError(w, "ID não fornecido na URL", http.StatusBadRequest)
+		return 0, false
+	}
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		respondWithJSONError(w, "ID inválido: deve ser um número positivo", http.StatusBadRequest)
 		return 0, false
 	}
 
-	idUint64, err := strconv.ParseUint(idStr, 10, 64)
-	if err != nil {
-		http.Error(w, fmt.Sprintf(`{"error":"ID inválido: %s"}`, err.Error()), http.StatusBadRequest)
-		return 0, false
-	}
-	return uint(idUint64), true
+	return uint(id), true
+
+}
+
+func respondWithJSONError(w http.ResponseWriter, message string, statusCode int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(map[string]string{"error": message})
 }

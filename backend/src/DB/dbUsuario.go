@@ -72,6 +72,27 @@ func ApagarUsuario(db *gorm.DB, id uint) error {
 	return nil
 }
 
+//editar o usuario pelo id recebido
+// func EditarUsuario(db *gorm.DB, id uint, usuario model.Usuario) error{
+// 	var existingUsuario model.Academia
+// 	err := db.First(&existingUsuario, id).Error
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	// Atualiza os campos da academia existente com os novos valores
+// 	existingUsuario.Nome = academia.Nome
+// 	existingUsuario.Endereco = academia.Endereco
+// 	existingUsuario.Telefone = academia.Telefone
+
+// 	err = db.Save(&existingUsuario).Error
+// 	if err != nil {
+// 		return err
+// 	}
+// 	fmt.Println("Academia editada com sucesso:", existingUsuario.Nome)
+// 	return nil
+// }
+
 // editar academia pelo id recebido
 // func EditarAcademias(db *gorm.DB, id uint, academia model.Academia) error {
 // 	var existingAcademia model.Academia

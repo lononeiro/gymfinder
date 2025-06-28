@@ -16,14 +16,22 @@ func CreateUsuario(usuairo model.Usuario) error {
 	return err
 }
 
-// func ListarAcademias() []model.Academia {
-// 	academias, err := DB.ListarAcademias(DB.DataBase)
-// 	if err != nil {
-// 		fmt.Println("Erro ao listar academias:", err)
-// 		return []model.Academia{}
-// 	}
-// 	return academias
-// }
+func ListarUsuarios() []model.Usuario {
+	usuarios, err := DB.ListarUsuarios(DB.DataBase)
+	if err != nil {
+		fmt.Println("Erro ao listar academias:", err)
+		return []model.Usuario{}
+	}
+	return usuarios
+}
+
+func ApagarUsuario(id uint) error {
+	err := DB.ApagarUsuario(DB.DataBase, id)
+	if err != nil {
+		fmt.Println("Erro ao apagar usuario:", err)
+	}
+	return err
+}
 
 // func EditarAcademias(id uint, academia model.Academia) error {
 // 	existingAcademia, err := DB.SelecionarAcademiaPoriD(DB.DataBase, id)
