@@ -7,14 +7,14 @@ import (
 	"github.com/lononeiro/gymfinder/backend/src/model"
 )
 
-func CreateAcademia(academia model.Academia) error {
-	err := DB.CreateAcademia(DB.DataBase, academia)
-
+func CreateAcademia(academia model.Academia, imagem model.Imagem) (model.Academia, error) {
+	created, err := DB.CreateAcademia(DB.DataBase, academia, imagem)
 	if err != nil {
 		fmt.Println("Erro ao criar academia:", err)
 	}
-	return err
+	return created, err
 }
+
 
 func ListarAcademias() []model.Academia {
 	academias, err := DB.ListarAcademias(DB.DataBase)

@@ -24,6 +24,7 @@ func ConnectAndMigrate() {
 		&model.Academia{},
 		&model.Usuario{},
 		&model.Comentario{},
+		&model.Imagem{},
 	)
 	if err != nil {
 		log.Fatal("migration failed:", err)

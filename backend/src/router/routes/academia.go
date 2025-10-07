@@ -10,7 +10,7 @@ var AcademiaRoutes = []Route{
 	{
 		URI:      "/academia",
 		Method:   "POST",
-		Function: applyMiddlewares(controller.AdicionarAcademia, utils.AuthMiddleware, middleware.AdminOnly),
+		Function: applyMiddlewares(controller.AdicionarAcademia, utils.AuthMiddleware),
 	},
 	{
 		URI:      "/academias",

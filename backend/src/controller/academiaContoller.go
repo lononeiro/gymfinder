@@ -11,17 +11,35 @@ import (
 )
 
 func AdicionarAcademia(w http.ResponseWriter, r *http.Request) {
-	var academia model.Academia
+	var payload struct {
+		model.Academia `json:"academia"`
+		Imagem model.Imagem `json:"imagem"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&payload)
 
-	err := json.NewDecoder(r.Body).Decode(&academia)
 	if err != nil {
 		http.Error(w, "Erro ao decodificar o corpo da requisição: "+err.Error(), http.StatusBadRequest)
 		return
 	}
-	repository.CreateAcademia(academia)
+	academia, err := repository.CreateAcademia(payload.Academia, payload.Imagem)
+	if err != nil {
+		http.Error(w, "Erro ao criar academia: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(academia)
+	response := map[string]interface{}{
+		"message": "Academia criada com sucesso",
+		"academia":  academia,
+	}
+	jsonData, err := json.MarshalIndent(response, "", "  ")
+	if err != nil {
+		http.Error(w, "Erro ao codificar a resposta: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(jsonData)
 }
+
 
 func ListarAcademias(w http.ResponseWriter, r *http.Request) {
 	academias := repository.ListarAcademias()

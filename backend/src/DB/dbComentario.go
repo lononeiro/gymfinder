@@ -48,7 +48,6 @@ func EditarComentario(db *gorm.DB, id uint, comentario model.Comentario) error {
 	if err != nil {
 		return fmt.Errorf("comentário com ID %d não encontrado: %w", id, err)
 	}
-
 	// Atualiza os campos do comentário existente com os novos valores
 	existingComentario.Texto = comentario.Texto
 	existingComentario.UsuarioID = comentario.UsuarioID
