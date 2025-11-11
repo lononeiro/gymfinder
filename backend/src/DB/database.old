@@ -5,7 +5,7 @@ import (
 
 	"github.com/lononeiro/gymfinder/backend/src/config"
 	"github.com/lononeiro/gymfinder/backend/src/model"
-	"gorm.io/driver/postgres"
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -14,7 +14,7 @@ var DataBase *gorm.DB
 func ConnectAndMigrate() {
 	dsn := config.LoadDSN()
 
-	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	database, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("failed to connect database:", err)
 	}

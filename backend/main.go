@@ -16,6 +16,9 @@ func main() {
 
 	r := router.InitializeRoutes()
 
+	r.PathPrefix("/uploads/").
+		Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
+
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},

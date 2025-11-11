@@ -15,7 +15,6 @@ func CreateAcademia(academia model.Academia, imagem model.Imagem) (model.Academi
 	return created, err
 }
 
-
 func ListarAcademias() []model.Academia {
 	academias, err := DB.ListarAcademias(DB.DataBase)
 	if err != nil {
@@ -28,27 +27,18 @@ func ListarAcademias() []model.Academia {
 func EditarAcademias(id uint, academia model.Academia) error {
 	existingAcademia, err := DB.SelecionarAcademiaPoriD(DB.DataBase, id)
 	if err != nil {
-		fmt.Println("Erro ao selecionar academia:", err)
 		return err
 	}
 
-	// Atualiza os campos da academia existente com os novos valores
 	existingAcademia.Nome = academia.Nome
 	existingAcademia.Endereco = academia.Endereco
 	existingAcademia.Telefone = academia.Telefone
 
 	err = DB.EditarAcademias(DB.DataBase, id, existingAcademia)
-	if err != nil {
-		fmt.Println("Erro ao editar academia:", err)
-		return err
-	}
-	return nil
+	return err
 }
 
 func ApagarAcademia(id uint) error {
 	err := DB.ApagarAcademia(DB.DataBase, id)
-	if err != nil {
-		fmt.Println("Erro ao apagar academia:", err)
-	}
 	return err
 }

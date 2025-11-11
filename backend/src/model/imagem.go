@@ -1,7 +1,7 @@
 package model
 
 type Imagem struct {
-	ID         int   `gorm:"primaryKey;autoIncrement" json:"id"`
+	ID         uint   `gorm:"primaryKey" json:"id"`
 	URL        string `json:"url"`
-	AcademiaID int   `gorm:"index;not null" json:"academia_id"`
+	AcademiaID uint   `json:"academia_id"`
 }

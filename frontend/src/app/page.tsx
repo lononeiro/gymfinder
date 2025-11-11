@@ -1,37 +1,53 @@
-"use client";
-import { useEffect, useState } from "react";
-import { api } from "@/services/api";
+"use client"
+import { useState } from "react"
 
-interface Academia {
-  id: number;
-  nome: string;
-  endereco: string;
-  preco: string;
-  descricao: string;
-}
+export default function NovaAcademia() {
+  interface AcademiaForm {
+    nome: string
+    endereco: string
+    telefone: string
+    preco: string
+  }
 
-export default function Home() {
-  const [academias, setAcademias] = useState<Academia[]>([]);
+  const [form, setForm] = useState<AcademiaForm>({
+    nome: "",
+    endereco: "",
+    telefone: "",
+    preco: ""
+  })
+  const [imagem, setImagem] = useState<File | null>(null)
 
-  useEffect(() => {
-    api.get("/academias")
-      .then((res) => setAcademias(res.data.academias))
-      .catch((err) => console.error(err));
-  }, []);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value })
+  }
+
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    const data = new FormData()
+    data.append("nome", form.nome)
+    data.append("endereco", form.endereco)
+    data.append("telefone", form.telefone)
+    data.append("preco", form.preco)
+    if (imagem) data.append("imagem", imagem)
+
+    const res = await fetch("http://localhost:8081/academia", {
+      method: "POST",
+      body: data
+    })
+
+    const json = await res.json()
+    console.log(json)
+  }
 
   return (
-    <main className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Academias</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {academias.map((a) => (
-          <div key={a.id} className="bg-gray-800 p-4 rounded-xl shadow">
-            <h2 className="text-xl font-semibold">{a.nome}</h2>
-            <p>{a.endereco}</p>
-            <p>{a.preco}</p>
-            <p className="text-sm text-gray-400 mt-2">{a.descricao}</p>
-          </div>
-        ))}
-      </div>
-    </main>
-  );
+    <form onSubmit={submit}>
+      <input name="nome" onChange={handleChange} placeholder="Nome" />
+      <input name="endereco" onChange={handleChange} placeholder="Endereço" />
+      <input name="telefone" onChange={handleChange} placeholder="Telefone" />
+      <input name="preco" onChange={handleChange} placeholder="Preço" />
+      <input type="file" accept="image/*" onChange={e => setImagem(e.currentTarget.files?.[0] ?? null)} />
+      <button type="submit">Enviar</button>
+    </form>
+  )
 }

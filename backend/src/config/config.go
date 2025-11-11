@@ -2,17 +2,16 @@ package config
 
 import (
 	"fmt"
-	"log"
+	// "log"
 	"os"
 
 	"github.com/joho/godotenv"
+	// "gorm.io/driver/postgres"
+
 )
 
 func LoadDSN() string {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Erro ao carregar .env")
-	}
+	_ = godotenv.Load()
 
 	user := os.Getenv("DB_USER")
 	pass := os.Getenv("DB_PASS")
@@ -21,8 +20,8 @@ func LoadDSN() string {
 	dbname := os.Getenv("DB_NAME")
 
 	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?parseTime=true",
-		user, pass, host, port, dbname,
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=require",
+		host, user, pass, dbname, port,
 	)
 
 	return dsn
