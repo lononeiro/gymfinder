@@ -53,3 +53,12 @@ func ListarComentariosPost(academiaID uint) ([]model.Comentario, error) {
 	}
 	return comentarios, nil
 }
+
+func SelecionarUsuarioComentario(comentarioID uint) (model.Usuario, error) {
+	usuario, err := DB.SelecionarUsuarioComentario(DB.DataBase, comentarioID)
+	if err != nil {
+		fmt.Println("Erro ao selecionar usuário do comentário:", err)
+		return model.Usuario{}, err
+	}
+	return usuario, nil
+}

@@ -104,3 +104,18 @@ func ListarComentarios(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
 }
+
+func SelecionarUsuarioComentario(w http.ResponseWriter, r *http.Request) {
+	id, ok := utils.RetornarIdURL(w, r)
+	if !ok {
+		return
+	}
+	usuario, err := repository.SelecionarUsuarioComentario(id)
+	if err != nil {
+		http.Error(w, "Erro ao selecionar usuário do comentário: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(usuario)
+}

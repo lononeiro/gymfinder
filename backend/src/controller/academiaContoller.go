@@ -16,7 +16,7 @@ import (
 )
 
 const UploadPath = "./uploads"
-const MaxUploadSize = 10 << 20
+const MaxUploadSize = 10 << 20 // 10 MB
 
 func AdicionarAcademia(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, MaxUploadSize+512)
@@ -32,10 +32,22 @@ func AdicionarAcademia(w http.ResponseWriter, r *http.Request) {
 		Preco:    r.FormValue("preco"),
 	}
 
-	file, header, err := r.FormFile("imagem")
-	filename := ""
+	files := r.MultipartForm.File["imagens"]
+	var imagens []model.Imagem
 
-	if err == nil {
+	if len(files) == 0 {
+		http.Error(w, "É necessário enviar pelo menos uma imagem", http.StatusBadRequest)
+		return
+	}
+
+	os.MkdirAll(UploadPath, os.ModePerm)
+
+	for _, header := range files {
+		file, err := header.Open()
+		if err != nil {
+			http.Error(w, "Erro ao abrir arquivo", http.StatusBadRequest)
+			return
+		}
 		defer file.Close()
 
 		buf := make([]byte, 512)
@@ -57,9 +69,7 @@ func AdicionarAcademia(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		filename = uuid.New().String() + ext
-		os.MkdirAll(UploadPath, os.ModePerm)
-
+		filename := uuid.New().String() + ext
 		dst, err := os.Create(filepath.Join(UploadPath, filename))
 		if err != nil {
 			http.Error(w, "Erro ao salvar imagem", http.StatusInternalServerError)
@@ -68,10 +78,10 @@ func AdicionarAcademia(w http.ResponseWriter, r *http.Request) {
 		defer dst.Close()
 
 		io.Copy(dst, file)
-		academia.Imagem = filename
+		imagens = append(imagens, model.Imagem{URL: filename})
 	}
 
-	created, err := repository.CreateAcademia(academia, model.Imagem{URL: filename})
+	created, err := repository.CreateAcademia(academia, imagens)
 	if err != nil {
 		http.Error(w, "Erro ao criar academia: "+err.Error(), http.StatusInternalServerError)
 		return

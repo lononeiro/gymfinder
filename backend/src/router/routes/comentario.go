@@ -26,4 +26,10 @@ var ComentarioRoutes = []Route{
 		Method:   "PUT",
 		Function: applyMiddlewares(controller.EditarComentario, utils.AuthMiddleware),
 	},
+
+	{
+		URI:      "/comentario/{id}/usuario",
+		Method:   "GET",
+		Function: applyMiddlewares(controller.SelecionarUsuarioComentario),
+	},
 }

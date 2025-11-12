@@ -72,3 +72,12 @@ func ListarComentariosPost(db *gorm.DB, academiaID uint) ([]model.Comentario, er
 	fmt.Printf("%d comentários encontrados para a academia ID %d\n", len(comentarios), academiaID)
 	return comentarios, nil
 }
+
+func SelecionarUsuarioComentario(db *gorm.DB, comentarioID uint) (model.Usuario, error) {
+	var comentario model.Comentario
+	err := db.Preload("Usuario").First(&comentario, comentarioID).Error
+	if err != nil {
+		return model.Usuario{}, fmt.Errorf("comentário com ID %d não encontrado: %w", comentarioID, err)
+	}
+	return comentario.Usuario, nil
+}
