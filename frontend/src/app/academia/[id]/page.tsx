@@ -20,21 +20,45 @@ export default function AcademiaDetalhePage() {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : "";
 
-  // Busca academia + comentários
+  // Buscar dados da academia + comentários com nome do usuário
   async function fetchData() {
     try {
+      // Buscar academia
       const aca = await fetch(`${API_URL}/academias`);
       const lista = await aca.json();
       const selecionada = lista.find((x: any) => String(x.id) === String(id));
       setAcademia(selecionada || null);
 
-      // busca comentários
+      // Buscar comentários
       const com = await fetch(`${API_URL}/academia/${id}/comentario`);
       const comData = await com.json();
-      setComentarios(comData.comentarios || []);
+      const comentariosBrutos = comData.comentarios || [];
+
+      // Para cada comentário, buscar nome do usuário
+      const comentariosComUsuario = await Promise.all(
+        comentariosBrutos.map(async (c: any) => {
+          try {
+            const resUser = await fetch(
+              `${API_URL}/comentario/${c.id}/usuario`
+            );
+
+            const dadosUser = await resUser.json();
+
+            return {
+              ...c,
+              usuario_nome: dadosUser?.nome || "Usuário",
+            };
+          } catch {
+            return { ...c, usuario_nome: "Usuário" };
+          }
+        })
+      );
+
+      setComentarios(comentariosComUsuario);
     } catch (e) {
       console.error(e);
     }
+
     setLoading(false);
   }
 
@@ -62,16 +86,8 @@ export default function AcademiaDetalhePage() {
         throw new Error("Erro ao enviar comentário");
       }
 
-      // Adiciona comentário localmente (para aparecer imediatamente)
-      const novo = {
-        id: Math.random(), // temporário
-        texto: novoComentario,
-        usuario_nome: usuarioNome || "Você",
-      };
-      setComentarios((prev) => [novo, ...prev]);
-
       setNovoComentario("");
-      fetchData(); // atualiza com dados reais da API
+      fetchData();
     } catch (e) {
       console.error(e);
     }
@@ -110,6 +126,7 @@ export default function AcademiaDetalhePage() {
             Sem imagem
           </div>
         )}
+
         <div className="p-6">
           <h1 className="text-3xl font-semibold">{academia.nome}</h1>
           <p className="mt-2 text-slate-700">{academia.endereco}</p>
@@ -149,11 +166,14 @@ export default function AcademiaDetalhePage() {
             <p className="text-slate-500">Nenhum comentário ainda.</p>
           )}
 
-          {comentarios.map((c) => (
-            <div key={c.id} className="bg-white rounded-xl shadow p-4">
+          {comentarios.map((c, idx) => (
+            <div
+              key={c.id ?? idx}
+              className="bg-white rounded-xl shadow p-4"
+            >
               <p className="text-slate-800">{c.texto}</p>
               <p className="text-sm text-slate-500 mt-1">
-                Por {c.usuario_nome || "Usuário"}
+                Por {c.usuario_nome}
               </p>
             </div>
           ))}
