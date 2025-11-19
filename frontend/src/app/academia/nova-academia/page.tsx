@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import ProtectedRoute from "@/components/ProtectedRoute"
 import { getToken } from "@/lib/auth"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://gymfinder-m411.onrender.com"
 
 export default function NovaAcademiaPage() {
   const router = useRouter()

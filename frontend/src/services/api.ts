@@ -1,6 +1,6 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: "http://localhost:8081", // troca pelo endereço real da API GymFinder
+  baseURL: "https://gymfinder-m411.onrender.com", // troca pelo endereço real da API GymFinder
 });
 

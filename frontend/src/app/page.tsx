@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://gymfinder-m411.onrender.com"
 
 export default function AcademiasPage() {
   const [academias, setAcademias] = useState<any[]>([])
