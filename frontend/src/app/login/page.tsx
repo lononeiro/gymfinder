@@ -14,7 +14,7 @@ export default function LoginPage() {
     setErro("");
 
     try {
-      const response = await fetch("https://gymfinder-m411.onrender.com/usuario/login", {
+      const response = await fetch("https://gymfinder-1.onrender.com/usuario/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, senha }),

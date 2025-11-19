@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import CommentForm from "@/components/CommentForm"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://gymfinder-m411.onrender.com";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://gymfinder-1.onrender.com";
 
 export default function AcademiaDetalhePage() {
   const params = useParams();

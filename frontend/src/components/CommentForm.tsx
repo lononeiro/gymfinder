@@ -3,7 +3,7 @@
 import React, { useState } from "react"
 import { getToken, isAuthenticated } from "@/lib/auth"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://gymfinder-m411.onrender.com"
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://gymfinder-1.onrender.com"
 
 export default function CommentForm({
   academiaId,
