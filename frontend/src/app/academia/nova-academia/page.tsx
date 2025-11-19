@@ -1,10 +1,14 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import ProtectedRoute from "@/components/ProtectedRoute"
+import { getToken } from "@/lib/auth"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
 
 export default function NovaAcademiaPage() {
+  const router = useRouter()
   const [form, setForm] = useState({
     nome: "",
     endereco: "",
@@ -16,6 +20,12 @@ export default function NovaAcademiaPage() {
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [mensagem, setMensagem] = useState("")
+
+  useEffect(() => {
+    if (!getToken()) {
+      router.push("/login")
+    }
+  }, [router])
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -36,7 +46,7 @@ export default function NovaAcademiaPage() {
     setLoading(true)
 
     try {
-      const token = localStorage.getItem("jwt") || ""
+      const token = getToken() || ""
       const formData = new FormData()
       formData.append("nome", form.nome)
       formData.append("endereco", form.endereco)
@@ -46,25 +56,25 @@ export default function NovaAcademiaPage() {
 
       imagens.forEach((img) => formData.append("imagens", img))
 
-      const res =await fetch(`${API_URL}/academia`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify(form)
-          })
+      const res = await fetch(`${API_URL}/academia`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      })
 
       if (!res.ok) {
         const erroTexto = await res.text()
-        console.log("ERRO DO BACKEND:", erroTexto)
+        console.log("ERRO DO BACKEND:", res.status, erroTexto)
         throw new Error("Erro ao criar academia: " + erroTexto)
-        }
+      }
 
       setMensagem("✅ Academia criada com sucesso!")
       setForm({ nome: "", endereco: "", telefone: "", preco: "", descricao: "" })
       setImagens([])
       setPreviewUrls([])
+      router.push("/academia")
     } catch (err) {
       console.error(err)
       setMensagem("❌ Erro ao criar academia.")
@@ -74,113 +84,115 @@ export default function NovaAcademiaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex justify-center py-12 px-4">
-      <div className="w-full max-w-3xl bg-white shadow-xl rounded-2xl p-8">
-        <h1 className="text-3xl font-semibold text-center mb-8">Cadastrar Nova Academia</h1>
+    <ProtectedRoute>
+      <div className="min-h-screen bg-slate-50 flex justify-center py-12 px-4">
+        <div className="w-full max-w-3xl bg-white shadow-xl rounded-2xl p-8">
+          <h1 className="text-3xl font-semibold text-center mb-8">Cadastrar Nova Academia</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-medium text-slate-700">Nome</label>
+                <input
+                  name="nome"
+                  value={form.nome}
+                  onChange={handleChange}
+                  required
+                  className="w-full border rounded-lg p-3 mt-1 focus:ring-2 focus:ring-black outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium text-slate-700">Telefone</label>
+                <input
+                  name="telefone"
+                  value={form.telefone}
+                  onChange={handleChange}
+                  placeholder="(11) 99999-9999"
+                  className="w-full border rounded-lg p-3 mt-1 focus:ring-2 focus:ring-black outline-none"
+                />
+              </div>
+            </div>
+
             <div>
-              <label className="block font-medium text-slate-700">Nome</label>
+              <label className="block font-medium text-slate-700">Endereço</label>
               <input
-                name="nome"
-                value={form.nome}
+                name="endereco"
+                value={form.endereco}
                 onChange={handleChange}
                 required
                 className="w-full border rounded-lg p-3 mt-1 focus:ring-2 focus:ring-black outline-none"
               />
             </div>
 
-            <div>
-              <label className="block font-medium text-slate-700">Telefone</label>
-              <input
-                name="telefone"
-                value={form.telefone}
-                onChange={handleChange}
-                placeholder="(11) 99999-9999"
-                className="w-full border rounded-lg p-3 mt-1 focus:ring-2 focus:ring-black outline-none"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block font-medium text-slate-700">Endereço</label>
-            <input
-              name="endereco"
-              value={form.endereco}
-              onChange={handleChange}
-              required
-              className="w-full border rounded-lg p-3 mt-1 focus:ring-2 focus:ring-black outline-none"
-            />
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="block font-medium text-slate-700">Preço</label>
-              <input
-                name="preco"
-                value={form.preco}
-                onChange={handleChange}
-                placeholder="R$ 150,00"
-                className="w-full border rounded-lg p-3 mt-1 focus:ring-2 focus:ring-black outline-none"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block font-medium text-slate-700">Descrição</label>
-            <textarea
-              name="descricao"
-              value={form.descricao}
-              onChange={handleChange}
-              rows={4}
-              className="w-full border rounded-lg p-3 mt-1 focus:ring-2 focus:ring-black outline-none resize-none"
-            />
-          </div>
-
-          <div>
-            <label className="block font-medium text-slate-700">Imagens (você pode selecionar várias)</label>
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handleFiles}
-              className="mt-2"
-            />
-
-            {previewUrls.length > 0 && (
-              <div className="mt-4 flex gap-3 flex-wrap">
-                {previewUrls.map((url, i) => (
-                  <img
-                    key={i}
-                    src={url}
-                    alt={`Preview ${i + 1}`}
-                    className="w-28 h-28 object-cover rounded-lg shadow"
-                  />
-                ))}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-medium text-slate-700">Preço</label>
+                <input
+                  name="preco"
+                  value={form.preco}
+                  onChange={handleChange}
+                  placeholder="R$ 150,00"
+                  className="w-full border rounded-lg p-3 mt-1 focus:ring-2 focus:ring-black outline-none"
+                />
               </div>
-            )}
-          </div>
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-black text-white py-3 rounded-lg hover:bg-slate-800 transition disabled:opacity-50"
-          >
-            {loading ? "Enviando..." : "Criar Academia"}
-          </button>
+            <div>
+              <label className="block font-medium text-slate-700">Descrição</label>
+              <textarea
+                name="descricao"
+                value={form.descricao}
+                onChange={handleChange}
+                rows={4}
+                className="w-full border rounded-lg p-3 mt-1 focus:ring-2 focus:ring-black outline-none resize-none"
+              />
+            </div>
 
-          {mensagem && (
-            <p
-              className={`text-center mt-4 font-medium ${
-                mensagem.includes("✅") ? "text-green-600" : "text-red-600"
-              }`}
+            <div>
+              <label className="block font-medium text-slate-700">Imagens (você pode selecionar várias)</label>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleFiles}
+                className="mt-2"
+              />
+
+              {previewUrls.length > 0 && (
+                <div className="mt-4 flex gap-3 flex-wrap">
+                  {previewUrls.map((url, i) => (
+                    <img
+                      key={i}
+                      src={url}
+                      alt={`Preview ${i + 1}`}
+                      className="w-28 h-28 object-cover rounded-lg shadow"
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-black text-white py-3 rounded-lg hover:bg-slate-800 transition disabled:opacity-50"
             >
-              {mensagem}
-            </p>
-          )}
-        </form>
+              {loading ? "Enviando..." : "Criar Academia"}
+            </button>
+
+            {mensagem && (
+              <p
+                className={`text-center mt-4 font-medium ${
+                  mensagem.includes("✅") ? "text-green-600" : "text-red-600"
+                }`}
+              >
+                {mensagem}
+              </p>
+            )}
+          </form>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   )
 }

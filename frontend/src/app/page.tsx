@@ -159,7 +159,7 @@ export default function AcademiasPage() {
 
       {/* Animated intro */}
       <section className="max-w-6xl mx-auto px-4 py-8 md:py-12">
-        <div className="bg-white rounded-2xl shadow p-6 md:p-10 transform -translate-y-10 md:-translate-y-12 opacity-0 animate-slide-up-once">
+        <div className="mt-10 bg-white rounded-2xl shadow p-6 md:p-10 transform -translate-y-10 md:-translate-y-12 opacity-0 animate-slide-up-once">
           <h2 className="text-2xl md:text-3xl font-semibold">Academias perto de você</h2>
           <p className="mt-2 text-sm text-slate-600">
             Role para ver as academias — os cards vão aparecer com uma animação suave.

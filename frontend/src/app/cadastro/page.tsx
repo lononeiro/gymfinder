@@ -47,9 +47,9 @@ export default function CadastroPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-100 to-orange-200">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-        <h1 className="text-3xl font-bold mb-6 text-center">Crie sua conta</h1>
+        <h1 className="text-3xl font-semibold text-center text-gray-800 mb-6">Crie sua conta</h1>
 
         <form onSubmit={handleCadastro} className="flex flex-col gap-4">
           <div>
@@ -104,8 +104,8 @@ export default function CadastroPage() {
           <button
             type="submit"
             disabled={loading}
-            className={`mt-4 w-full rounded-lg p-3 font-semibold text-white transition ${
-              loading ? "bg-slate-400" : "bg-blue-600 hover:bg-blue-700"
+            className={`w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg font-semibold transition-colors
+              ${loading ? "opacity-50 cursor-not-allowed" : "bg-yellow-500 hover:bg-yellow-600"
             }`}
           >
             {loading ? "Cadastrando..." : "Cadastrar"}

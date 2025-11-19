@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import CommentForm from "@/components/CommentForm"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
 
@@ -66,34 +67,7 @@ export default function AcademiaDetalhePage() {
     if (id) fetchData();
   }, [id]);
 
-  async function enviarComentario() {
-    if (!novoComentario.trim()) return;
-    setSending(true);
-
-    try {
-      const token = localStorage.getItem("token") || "";
-
-      const res = await fetch(`${API_URL}/academia/${id}/comentario`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ texto: novoComentario }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Erro ao enviar comentário");
-      }
-
-      setNovoComentario("");
-      fetchData();
-    } catch (e) {
-      console.error(e);
-    }
-
-    setSending(false);
-  }
+  // comentário agora é tratado pelo CommentForm component
 
   if (loading) return <div className="p-6">Carregando...</div>;
   if (!academia) return <div className="p-6">Academia não encontrada.</div>;
@@ -145,20 +119,7 @@ export default function AcademiaDetalhePage() {
         <h2 className="text-2xl font-semibold">Comentários</h2>
 
         <div className="mt-4 bg-white rounded-xl shadow p-4">
-          <textarea
-            className="w-full border rounded p-3 h-28 outline-none"
-            placeholder="Escreva um comentário..."
-            value={novoComentario}
-            onChange={(e) => setNovoComentario(e.target.value)}
-          />
-
-          <button
-            onClick={enviarComentario}
-            disabled={sending}
-            className="mt-3 bg-black text-white px-4 py-2 rounded hover:bg-slate-800 transition disabled:opacity-50"
-          >
-            {sending ? "Enviando..." : "Enviar"}
-          </button>
+          <CommentForm academiaId={String(id)} onSuccess={() => fetchData()} />
         </div>
 
         <div className="mt-6 space-y-4">
