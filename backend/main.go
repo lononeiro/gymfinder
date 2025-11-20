@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/joho/godotenv"
 	"github.com/lononeiro/gymfinder/backend/src/DB"
 	"github.com/lononeiro/gymfinder/backend/src/router"
 	"github.com/rs/cors"
@@ -28,8 +29,13 @@ func main() {
 
 	handler := c.Handler(r)
 
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Nenhum arquivo .env encontrado")
+	}
+
 	fmt.Println("Servidor rodando em http://localhost:8081")
-	err := http.ListenAndServe(":8081", handler)
+	err = http.ListenAndServe(":8081", handler)
 	if err != nil {
 		log.Fatal("Erro ao iniciar o servidor:", err)
 	}
