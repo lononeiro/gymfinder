@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/lononeiro/gymfinder/backend/src/utils"
 )
 
-const UploadPath = "./uploads"
 const MaxUploadSize = 10 << 20 // 10 MB
 
 func AdicionarAcademia(w http.ResponseWriter, r *http.Request) {
@@ -40,8 +38,6 @@ func AdicionarAcademia(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	os.MkdirAll(UploadPath, os.ModePerm)
-
 	for _, header := range files {
 		file, err := header.Open()
 		if err != nil {
@@ -50,35 +46,50 @@ func AdicionarAcademia(w http.ResponseWriter, r *http.Request) {
 		}
 		defer file.Close()
 
+		// Verifica tipo da imagem
 		buf := make([]byte, 512)
 		n, _ := file.Read(buf)
 		contentType := http.DetectContentType(buf[:n])
-		types := map[string]bool{"image/jpeg": true, "image/png": true, "image/webp": true}
+
+		types := map[string]bool{
+			"image/jpeg": true,
+			"image/png":  true,
+			"image/webp": true,
+		}
+
 		if !types[contentType] {
 			http.Error(w, "Formato de imagem não permitido", http.StatusBadRequest)
 			return
 		}
 
+		// volta o ponteiro do arquivo
 		file.Seek(0, io.SeekStart)
+
+		// Gera a extensão
 		ext := strings.ToLower(filepath.Ext(header.Filename))
 		if ext == "" {
-			if contentType == "image/png" {
+			switch contentType {
+			case "image/png":
 				ext = ".png"
-			} else {
+			case "image/webp":
+				ext = ".webp"
+			default:
 				ext = ".jpg"
 			}
 		}
 
+		// Nome final único
 		filename := uuid.New().String() + ext
-		dst, err := os.Create(filepath.Join(UploadPath, filename))
+
+		// 🔥 Envia para a FILEBASE
+		url, err := utils.UploadToFilebase(file, filename)
 		if err != nil {
-			http.Error(w, "Erro ao salvar imagem", http.StatusInternalServerError)
+			http.Error(w, "Erro ao enviar imagem para armazenamento: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
-		defer dst.Close()
 
-		io.Copy(dst, file)
-		imagens = append(imagens, model.Imagem{URL: filename})
+		// Salva a URL no banco
+		imagens = append(imagens, model.Imagem{URL: url})
 	}
 
 	created, err := repository.CreateAcademia(academia, imagens)
