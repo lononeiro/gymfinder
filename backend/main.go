@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/lononeiro/gymfinder/backend/src/DB"
 	"github.com/lononeiro/gymfinder/backend/src/router"
+	"github.com/lononeiro/gymfinder/backend/src/utils"
 	"github.com/rs/cors"
 )
 
@@ -19,6 +20,10 @@ func main() {
 		fmt.Println("⚠ Aviso: .env não encontrado ou não pôde ser carregado")
 	} else {
 		fmt.Println("✔ .env carregado com sucesso")
+	}
+
+	if err := utils.TestFilebaseConnection(); err != nil {
+		fmt.Printf("Erro: %v\n", err)
 	}
 
 	// 2) conectar banco
@@ -34,7 +39,7 @@ func main() {
 
 	// 4) CORS
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "https://gymfinder-1.onrender.com", "https://gymfinder-nine.vercel.app"},
+		AllowedOrigins:   []string{"http://localhost:3000", "https://gymfinder-1.onrender.com", "https://gymfinder-nine.vercel.app", "https://s3.filebase.com"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		AllowCredentials: true,
