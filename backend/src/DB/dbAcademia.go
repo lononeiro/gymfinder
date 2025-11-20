@@ -39,7 +39,20 @@ func SelecionarAcademiaPoriD(db *gorm.DB, id uint) (model.Academia, error) {
 func ListarAcademias(db *gorm.DB) ([]model.Academia, error) {
 	var academias []model.Academia
 	err := db.Preload("Imagens").Find(&academias).Error
-	return academias, err
+	if err != nil {
+		return nil, err
+	}
+
+	bucket := "gymfinder" // ex: gymfinder
+	baseURL := "https://" + bucket + ".s3.filebase.com/"
+
+	for i := range academias {
+		for j := range academias[i].Imagens {
+			academias[i].Imagens[j].URL = baseURL + academias[i].Imagens[j].URL
+		}
+	}
+
+	return academias, nil
 }
 
 func ApagarAcademia(db *gorm.DB, id uint) error {
