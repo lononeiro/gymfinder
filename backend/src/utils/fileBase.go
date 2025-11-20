@@ -29,6 +29,7 @@ func mustGetFilebaseEnv() (accessKey, secretKey, region, endpoint, bucket string
 	secretKey = strings.TrimSpace(os.Getenv("FILEBASE_S3_SECRET_KEY"))
 	region = strings.TrimSpace(os.Getenv("FILEBASE_S3_REGION"))
 	endpoint = strings.TrimSpace(os.Getenv("FILEBASE_S3_ENDPOINT"))
+	fmt.Println(accessKey, secretKey, region, endpoint)
 
 	// aceitar FILEBASE_BUCKET (mais usado) ou FILEBASE_S3_BUCKET (alternativa)
 	bucket = strings.TrimSpace(os.Getenv("FILEBASE_BUCKET"))
