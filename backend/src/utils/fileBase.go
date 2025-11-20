@@ -18,7 +18,7 @@ import (
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
-// Tenta carregar .env automaticamente (silencioso)
+// Carrega .env automaticamente
 func init() {
 	_ = godotenv.Load()
 }
@@ -29,9 +29,8 @@ func mustGetFilebaseEnv() (accessKey, secretKey, region, endpoint, bucket string
 	secretKey = strings.TrimSpace(os.Getenv("FILEBASE_S3_SECRET_KEY"))
 	region = strings.TrimSpace(os.Getenv("FILEBASE_S3_REGION"))
 	endpoint = strings.TrimSpace(os.Getenv("FILEBASE_S3_ENDPOINT"))
-	fmt.Println(accessKey, secretKey, region, endpoint)
 
-	// aceitar FILEBASE_BUCKET (mais usado) ou FILEBASE_S3_BUCKET (alternativa)
+	// aceitar FILEBASE_BUCKET (mais comum) ou FILEBASE_S3_BUCKET
 	bucket = strings.TrimSpace(os.Getenv("FILEBASE_BUCKET"))
 	if bucket == "" {
 		bucket = strings.TrimSpace(os.Getenv("FILEBASE_S3_BUCKET"))
@@ -57,11 +56,11 @@ func mustGetFilebaseEnv() (accessKey, secretKey, region, endpoint, bucket string
 	if len(missing) > 0 {
 		err = fmt.Errorf("variáveis de ambiente faltando: %s (carregue .env ou defina no ambiente)", strings.Join(missing, ", "))
 	}
+
 	return
 }
 
-// NewFilebaseClient cria o cliente S3 (Filebase) usando SDK v2.
-// Retorna erro claro se alguma variável estiver faltando.
+// NewFilebaseClient cria o cliente S3 compatível com Filebase usando SDK v2.
 func NewFilebaseClient(ctx context.Context) (*s3.Client, error) {
 	access, secret, region, endpoint, _, err := mustGetFilebaseEnv()
 	if err != nil {
@@ -72,10 +71,9 @@ func NewFilebaseClient(ctx context.Context) (*s3.Client, error) {
 		ctx,
 		config.WithRegion(region),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(access, secret, "")),
-		// usar WithEndpointResolverWithOptions para aceitar o tipo com options
 		config.WithEndpointResolverWithOptions(
 			aws.EndpointResolverWithOptionsFunc(
-				func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+				func(service, region string, options ...any) (aws.Endpoint, error) {
 					return aws.Endpoint{
 						URL:           endpoint,
 						SigningRegion: region,
@@ -84,6 +82,7 @@ func NewFilebaseClient(ctx context.Context) (*s3.Client, error) {
 			),
 		),
 	)
+
 	if err != nil {
 		return nil, fmt.Errorf("erro ao carregar config AWS: %w", err)
 	}
@@ -95,10 +94,12 @@ func NewFilebaseClient(ctx context.Context) (*s3.Client, error) {
 	return client, nil
 }
 
-// UploadToFilebase faz upload de um multipart.File para o bucket configurado.
-// Retorna a URL pública do objeto ou erro detalhado.
+// UploadToFilebase faz upload de um multipart.File
+// Retorna URL pública ou erro.
 func UploadToFilebase(file multipart.File, filename string) (string, error) {
-	// lê tudo (se quiser evitar OOM para arquivos gigantes, trocar para multipart upload)
+	defer file.Close() // evita vazamento de file descriptors
+
+	// lê tudo para buffer
 	buf := new(bytes.Buffer)
 	if _, err := io.Copy(buf, file); err != nil {
 		return "", fmt.Errorf("erro ao ler arquivo do request: %w", err)
@@ -110,15 +111,16 @@ func UploadToFilebase(file multipart.File, filename string) (string, error) {
 		return "", fmt.Errorf("erro ao criar cliente Filebase: %w", err)
 	}
 
-	// obtém bucket (pode vir de FILEBASE_BUCKET ou FILEBASE_S3_BUCKET)
+	// obtém bucket
 	bucket := strings.TrimSpace(os.Getenv("FILEBASE_BUCKET"))
 	if bucket == "" {
 		bucket = strings.TrimSpace(os.Getenv("FILEBASE_S3_BUCKET"))
 	}
 	if bucket == "" {
-		return "", fmt.Errorf("bucket não configurado: defina FILEBASE_BUCKET ou FILEBASE_S3_BUCKET")
+		return "", fmt.Errorf("bucket não configurado (defina FILEBASE_BUCKET ou FILEBASE_S3_BUCKET)")
 	}
 
+	// upload
 	_, err = client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: &bucket,
 		Key:    &filename,

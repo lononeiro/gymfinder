@@ -12,14 +12,27 @@ import (
 )
 
 func main() {
+
+	// 🔥 1) CARREGAR VARIÁVEIS .env
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("⚠ Aviso: .env não encontrado ou não pôde ser carregado")
+	} else {
+		fmt.Println("✔ .env carregado com sucesso")
+	}
+
+	// 2) conectar banco
 	DB.ConnectAndMigrate()
 	fmt.Println("Aplicação começou")
 
+	// 3) rotas
 	r := router.InitializeRoutes()
 
+	// servir imagens locais (opcional se usar Filebase)
 	r.PathPrefix("/uploads/").
 		Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
 
+	// 4) CORS
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000", "https://gymfinder-1.onrender.com", "https://gymfinder-nine.vercel.app"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -29,11 +42,7 @@ func main() {
 
 	handler := c.Handler(r)
 
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("Nenhum arquivo .env encontrado")
-	}
-
+	// 5) iniciar servidor
 	fmt.Println("Servidor rodando em http://localhost:8081")
 	err = http.ListenAndServe(":8081", handler)
 	if err != nil {
