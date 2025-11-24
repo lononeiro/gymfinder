@@ -2,7 +2,6 @@ package utils
 
 import (
 	"bytes"
-	// "context"
 	"fmt"
 	"mime/multipart"
 	"os"
@@ -17,10 +16,14 @@ import (
 
 // Carrega .env automaticamente
 func init() {
+	// Ignora o erro se o arquivo .env não for encontrado
 	_ = godotenv.Load()
 }
 
+// getFilebaseConfig lê as variáveis de ambiente necessárias para a configuração.
 func getFilebaseConfig() (accessKey, secretKey, region, endpoint, bucket string, err error) {
+	// Nota: Esta função usa nomes de variáveis ligeiramente diferentes
+	// (e.g., FILEBASE_S3_ACCESS_KEY), mas o TestFilebaseConnection a utiliza corretamente.
 	accessKey = strings.TrimSpace(os.Getenv("FILEBASE_S3_ACCESS_KEY"))
 	secretKey = strings.TrimSpace(os.Getenv("FILEBASE_S3_SECRET_KEY"))
 	region = strings.TrimSpace(os.Getenv("FILEBASE_S3_REGION"))
@@ -52,7 +55,10 @@ func getFilebaseConfig() (accessKey, secretKey, region, endpoint, bucket string,
 }
 
 // NewFilebaseSession cria e retorna uma sessão da AWS configurada para o Filebase.
+// Esta função usa as variáveis FILEBASE_ACCESS_KEY e FILEBASE_ENDPOINT.
 func NewFilebaseSession() (*session.Session, error) {
+	// Nota: Aqui são usadas as chaves sem o prefixo _S3_, que são as chaves padrão
+	// usadas na função UploadToFilebase.
 	accessKey := os.Getenv("FILEBASE_ACCESS_KEY")
 	secretKey := os.Getenv("FILEBASE_SECRET_KEY")
 	endpoint := os.Getenv("FILEBASE_ENDPOINT")
@@ -63,7 +69,7 @@ func NewFilebaseSession() (*session.Session, error) {
 
 	s3Config := &aws.Config{
 		Endpoint:         aws.String(endpoint),
-		Region:           aws.String("us-east-1"),
+		Region:           aws.String("us-east-1"), // Região necessária para Filebase
 		S3ForcePathStyle: aws.Bool(true),
 		Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, ""),
 	}
@@ -78,15 +84,17 @@ func NewFilebaseSession() (*session.Session, error) {
 
 // UploadToFilebase faz o upload de um arquivo para o Filebase e retorna a URL pública do IPFS.
 func UploadToFilebase(file multipart.File, filename string) (string, error) {
+	// Garantir que o arquivo seja fechado
 	defer file.Close()
-	// ctx := context.TODO()
 
+	// Ler arquivo para buffer
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(file)
 	if err != nil {
 		return "", fmt.Errorf("erro ao ler arquivo: %w", err)
 	}
 
+	// Criar sessão Filebase
 	sess, err := NewFilebaseSession()
 	if err != nil {
 		return "", err
@@ -99,15 +107,20 @@ func UploadToFilebase(file multipart.File, filename string) (string, error) {
 		return "", fmt.Errorf("FILEBASE_BUCKET não definido")
 	}
 
+	contentType := getContentType(filename)
+
+	// Upload do arquivo
 	_, err = client.PutObject(&s3.PutObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(filename),
-		Body:   bytes.NewReader(buf.Bytes()),
+		Bucket:      aws.String(bucket),
+		Key:         aws.String(filename),
+		Body:        bytes.NewReader(buf.Bytes()),
+		ContentType: aws.String(contentType), // Definir ContentType é uma boa prática
 	})
 	if err != nil {
 		return "", fmt.Errorf("erro no upload: %w", err)
 	}
 
+	// Obter metadados (CID)
 	head, err := client.HeadObject(&s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(filename),
@@ -116,15 +129,20 @@ func UploadToFilebase(file multipart.File, filename string) (string, error) {
 		return "", fmt.Errorf("erro ao obter metadata: %w", err)
 	}
 
+	// Lógica de recuperação do CID (corrigida)
+	keysToTry := []string{"x-filebase-object-cid", "X-Filebase-Object-Cid"}
 	cid := ""
-	if head.Metadata != nil {
-		// Verifique se a chave existe e obtenha o valor (que é um *string)
-		valuePtr, ok := head.Metadata["x-filebase-object-cid"]
 
-		// Se a chave existir E o ponteiro não for nulo, desreferencie-o
-		if ok && valuePtr != nil {
-			// Solução: Desreferencie o ponteiro para *string
-			cid = *valuePtr
+	if head.Metadata != nil {
+		for _, key := range keysToTry {
+			// Acessa o valor, que é um ponteiro para string (*string)
+			valuePtr, ok := head.Metadata[key]
+
+			// Se a chave existir E o ponteiro não for nulo, desreferencie-o
+			if ok && valuePtr != nil {
+				cid = *valuePtr
+				break
+			}
 		}
 	}
 
@@ -132,6 +150,7 @@ func UploadToFilebase(file multipart.File, filename string) (string, error) {
 		return "", fmt.Errorf("CID não encontrado no metadado")
 	}
 
+	// URL via gateway IPFS
 	publicURL := fmt.Sprintf("https://ipfs.filebase.io/ipfs/%s", cid)
 
 	return publicURL, nil
@@ -156,6 +175,8 @@ func getContentType(filename string) string {
 
 // TestFilebaseConnection testa a conexão com Filebase usando SDK v1
 func TestFilebaseConnection() error {
+	// Aqui a função NewFilebaseSession está sendo reutilizada, mas os logs
+	// de getFilebaseConfig usam chaves diferentes para logar (com prefixo _S3_).
 	sess, err := NewFilebaseSession()
 	if err != nil {
 		return fmt.Errorf("falha ao criar sessão: %w", err)
@@ -163,15 +184,17 @@ func TestFilebaseConnection() error {
 
 	s3Client := s3.New(sess)
 
+	// Usando getFilebaseConfig apenas para obter o nome do bucket e logs de variáveis
 	_, _, _, _, bucket, err := getFilebaseConfig()
 	if err != nil {
+		// Se as variáveis de teste (com _S3_) estiverem faltando, retorna erro
 		return fmt.Errorf("falha ao obter configurações: %w", err)
 	}
 
 	fmt.Printf("🔍 Testando conexão com Filebase (SDK v1)...\n")
 	fmt.Printf("📦 Bucket: %s\n", bucket)
 
-	// Lista buckets para testar permissões
+	// Lista buckets para testar permissões de leitura
 	result, err := s3Client.ListBuckets(&s3.ListBucketsInput{})
 	if err != nil {
 		return fmt.Errorf("❌ Falha ao listar buckets: %w", err)
@@ -179,7 +202,7 @@ func TestFilebaseConnection() error {
 
 	fmt.Printf("✅ Conexão básica OK - %d buckets encontrados:\n", len(result.Buckets))
 	for _, b := range result.Buckets {
-		fmt.Printf("   - %s\n", aws.StringValue(b.Name))
+		fmt.Printf("   - %s\n", aws.StringValue(b.Name))
 	}
 
 	// Verifica se o bucket existe
