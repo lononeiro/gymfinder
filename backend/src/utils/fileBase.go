@@ -2,8 +2,8 @@ package utils
 
 import (
 	"bytes"
+	// "context"
 	"fmt"
-	"io"
 	"mime/multipart"
 	"os"
 	"strings"
@@ -51,25 +51,24 @@ func getFilebaseConfig() (accessKey, secretKey, region, endpoint, bucket string,
 	return
 }
 
-// NewFilebaseSession cria uma sessão S3 compatível com Filebase usando AWS SDK v1
+// NewFilebaseSession cria e retorna uma sessão da AWS configurada para o Filebase.
 func NewFilebaseSession() (*session.Session, error) {
-	access, secret, region, endpoint, _, err := getFilebaseConfig()
-	if err != nil {
-		return nil, fmt.Errorf("configuração Filebase inválida: %w", err)
+	accessKey := os.Getenv("FILEBASE_ACCESS_KEY")
+	secretKey := os.Getenv("FILEBASE_SECRET_KEY")
+	endpoint := os.Getenv("FILEBASE_ENDPOINT")
+
+	if accessKey == "" || secretKey == "" || endpoint == "" {
+		return nil, fmt.Errorf("FILEBASE_ACCESS_KEY, FILEBASE_SECRET_KEY ou FILEBASE_ENDPOINT não definidos")
 	}
 
-	// Configuração EXATA como na documentação Filebase
-	s3Config := aws.Config{
-		Credentials:      credentials.NewStaticCredentials(access, secret, ""),
+	s3Config := &aws.Config{
 		Endpoint:         aws.String(endpoint),
-		Region:           aws.String(region),
-		S3ForcePathStyle: aws.Bool(true), // ← ESSENCIAL para Filebase
+		Region:           aws.String("us-east-1"),
+		S3ForcePathStyle: aws.Bool(true),
+		Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, ""),
 	}
 
-	sess, err := session.NewSessionWithOptions(session.Options{
-		Config:  s3Config,
-		Profile: "filebase",
-	})
+	sess, err := session.NewSession(s3Config)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao criar sessão Filebase: %w", err)
 	}
@@ -77,46 +76,64 @@ func NewFilebaseSession() (*session.Session, error) {
 	return sess, nil
 }
 
-// UploadToFilebase faz upload de um multipart.File para o Filebase
+// UploadToFilebase faz o upload de um arquivo para o Filebase e retorna a URL pública do IPFS.
 func UploadToFilebase(file multipart.File, filename string) (string, error) {
-	// Lê o conteúdo do arquivo para bytes
+	defer file.Close()
+	// ctx := context.TODO()
+
 	buf := new(bytes.Buffer)
-	if _, err := io.Copy(buf, file); err != nil {
+	_, err := buf.ReadFrom(file)
+	if err != nil {
 		return "", fmt.Errorf("erro ao ler arquivo: %w", err)
 	}
 
-	// Cria sessão
 	sess, err := NewFilebaseSession()
 	if err != nil {
-		return "", fmt.Errorf("erro ao criar sessão: %w", err)
+		return "", err
 	}
 
-	// Cria cliente S3
-	s3Client := s3.New(sess)
+	client := s3.New(sess)
 
-	// Obtém bucket
-	_, _, _, _, bucket, err := getFilebaseConfig()
-	if err != nil {
-		return "", fmt.Errorf("erro ao obter configurações: %w", err)
+	bucket := os.Getenv("FILEBASE_BUCKET")
+	if bucket == "" {
+		return "", fmt.Errorf("FILEBASE_BUCKET não definido")
 	}
 
-	// Determina content type
-	contentType := getContentType(filename)
-
-	// Faz upload (igual à documentação)
-	_, err = s3Client.PutObject(&s3.PutObjectInput{
-		Bucket:      aws.String(bucket),
-		Key:         aws.String(filename),
-		Body:        bytes.NewReader(buf.Bytes()),
-		ContentType: aws.String(contentType),
+	_, err = client.PutObject(&s3.PutObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(filename),
+		Body:   bytes.NewReader(buf.Bytes()),
 	})
-
 	if err != nil {
-		return "", fmt.Errorf("erro ao fazer upload para Filebase: %w", err)
+		return "", fmt.Errorf("erro no upload: %w", err)
 	}
 
-	// URL pública
-	publicURL := fmt.Sprintf("https://s3.filebase.com/%s/%s", bucket, filename)
+	head, err := client.HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(filename),
+	})
+	if err != nil {
+		return "", fmt.Errorf("erro ao obter metadata: %w", err)
+	}
+
+	cid := ""
+	if head.Metadata != nil {
+		// Verifique se a chave existe e obtenha o valor (que é um *string)
+		valuePtr, ok := head.Metadata["x-filebase-object-cid"]
+
+		// Se a chave existir E o ponteiro não for nulo, desreferencie-o
+		if ok && valuePtr != nil {
+			// Solução: Desreferencie o ponteiro para *string
+			cid = *valuePtr
+		}
+	}
+
+	if cid == "" {
+		return "", fmt.Errorf("CID não encontrado no metadado")
+	}
+
+	publicURL := fmt.Sprintf("https://ipfs.filebase.io/ipfs/%s", cid)
+
 	return publicURL, nil
 }
 

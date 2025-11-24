@@ -43,8 +43,7 @@ func ListarAcademias(db *gorm.DB) ([]model.Academia, error) {
 		return nil, err
 	}
 
-	bucket := "gymfinder" // ex: gymfinder
-	baseURL := "https://" + bucket + ".s3.filebase.com/"
+	baseURL := "https://gymfinder.s3.filebase.com/"
 
 	for i := range academias {
 		for j := range academias[i].Imagens {
