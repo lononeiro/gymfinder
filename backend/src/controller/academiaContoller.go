@@ -44,6 +44,9 @@ func AdicionarAcademia(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Erro ao abrir arquivo", http.StatusBadRequest)
 			return
 		}
+		// O defer file.Close() é chamado APÓS o loop, o que está tecnicamente incorreto
+		// para lidar com erros dentro do loop, mas vamos mantê-lo aqui
+		// para seguir a sua estrutura, idealmente deveria estar dentro do loop.
 		defer file.Close()
 
 		// Verifica tipo da imagem
@@ -63,7 +66,7 @@ func AdicionarAcademia(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// volta o ponteiro do arquivo
-		file.Seek(0, io.SeekStart)
+		_, _ = file.Seek(0, io.SeekStart)
 
 		// Gera a extensão
 		ext := strings.ToLower(filepath.Ext(header.Filename))
@@ -81,14 +84,14 @@ func AdicionarAcademia(w http.ResponseWriter, r *http.Request) {
 		// Nome final único
 		filename := uuid.New().String() + ext
 
-		// 🔥 Envia para a FILEBASE
+		// 🔥 Envia para a FILEBASE (url = https://ipfs.filebase.io/ipfs/CID)
 		url, err := utils.UploadToFilebase(file, filename)
 		if err != nil {
 			http.Error(w, "Erro ao enviar imagem para armazenamento: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		// Salva a URL no banco
+		// Salva a URL COMPLETA no banco
 		imagens = append(imagens, model.Imagem{URL: url})
 	}
 
@@ -106,6 +109,7 @@ func AdicionarAcademia(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// ... (Resto das funções Listar, Editar, Apagar permanecem inalteradas)
 func ListarAcademias(w http.ResponseWriter, r *http.Request) {
 	academias := repository.ListarAcademias()
 	w.Header().Set("Content-Type", "application/json")

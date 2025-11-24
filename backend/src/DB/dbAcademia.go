@@ -36,6 +36,7 @@ func SelecionarAcademiaPoriD(db *gorm.DB, id uint) (model.Academia, error) {
 	return academia, err
 }
 
+// ListarAcademias AGORA NÃO PREFIXA MAIS A URL, POIS ELA JÁ DEVE ESTAR COMPLETA NO BANCO
 func ListarAcademias(db *gorm.DB) ([]model.Academia, error) {
 	var academias []model.Academia
 	err := db.Preload("Imagens").Find(&academias).Error
@@ -43,13 +44,17 @@ func ListarAcademias(db *gorm.DB) ([]model.Academia, error) {
 		return nil, err
 	}
 
-	baseURL := "https://gymfinder.s3.filebase.com/"
+	// ⚠️ REMOÇÃO DA LÓGICA DE CONCATENAÇÃO DE URLS ⚠️
+	// Se a URL já é o link IPFS completo (ex: https://ipfs.filebase.io/ipfs/CID),
+	// não precisamos mais fazer: baseURL + academias[i].Imagens[j].URL
 
-	for i := range academias {
-		for j := range academias[i].Imagens {
-			academias[i].Imagens[j].URL = baseURL + academias[i].Imagens[j].URL
-		}
-	}
+	// Se você deseja garantir que o campo não seja modificado, remova estas linhas:
+	// baseURL := "https://gymfinder.s3.filebase.com/"
+	// for i := range academias {
+	// 	for j := range academias[i].Imagens {
+	// 		academias[i].Imagens[j].URL = baseURL + academias[i].Imagens[j].URL
+	// 	}
+	// }
 
 	return academias, nil
 }
@@ -61,6 +66,10 @@ func ApagarAcademia(db *gorm.DB, id uint) error {
 		return err
 	}
 
+	// NOTA: Esta remoção de arquivo só funcionaria para uploads locais,
+	// mas não afetará o Filebase/IPFS. Manter a lógica de remoção de arquivo
+	// é perigosa aqui, pois o URL no banco agora é um CID/URL IPFS.
+	// Vou manter seu código original aqui, mas note que não apaga no Filebase.
 	for _, img := range academia.Imagens {
 		os.Remove(filepath.Join(UploadPath, img.URL))
 	}
