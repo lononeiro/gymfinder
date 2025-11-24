@@ -37,6 +37,8 @@ func SelecionarAcademiaPoriD(db *gorm.DB, id uint) (model.Academia, error) {
 }
 
 // ListarAcademias AGORA NÃO PREFIXA MAIS A URL, POIS ELA JÁ DEVE ESTAR COMPLETA NO BANCO
+// DB/DB.go
+
 func ListarAcademias(db *gorm.DB) ([]model.Academia, error) {
 	var academias []model.Academia
 	err := db.Preload("Imagens").Find(&academias).Error
@@ -44,21 +46,11 @@ func ListarAcademias(db *gorm.DB) ([]model.Academia, error) {
 		return nil, err
 	}
 
-	// ⚠️ REMOÇÃO DA LÓGICA DE CONCATENAÇÃO DE URLS ⚠️
-	// Se a URL já é o link IPFS completo (ex: https://ipfs.filebase.io/ipfs/CID),
-	// não precisamos mais fazer: baseURL + academias[i].Imagens[j].URL
-
-	// Se você deseja garantir que o campo não seja modificado, remova estas linhas:
-	// baseURL := "https://gymfinder.s3.filebase.com/"
-	// for i := range academias {
-	// 	for j := range academias[i].Imagens {
-	// 		academias[i].Imagens[j].URL = baseURL + academias[i].Imagens[j].URL
-	// 	}
-	// }
+	// ⚠️ ATENÇÃO: NENHUMA LÓGICA DE MODIFICAÇÃO DE URL É NECESSÁRIA AQUI.
+	// As URLs de IPFS devem ser retornadas EXATAMENTE como estão salvas no banco.
 
 	return academias, nil
 }
-
 func ApagarAcademia(db *gorm.DB, id uint) error {
 	var academia model.Academia
 	err := db.Preload("Imagens").First(&academia, id).Error
