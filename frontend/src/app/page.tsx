@@ -29,14 +29,28 @@ export default function AcademiasPage() {
   // --- Carousel logic ---
   const slides = academias.length
     ? academias.map((item) => {
-        const firstImage = item.imagens?.[0]?.url || item.imagem || null
-        return {
+      // Usando 'URL' em caixa alta, conforme o padrão Go/GORM
+      const firstImage = item.imagens?.[0]?.URL || item.imagem || null
+      
+      // 🚨 CORREÇÃO DE URL PARA O CARROSSEL
+      let carouselImageUrl = null
+      if (firstImage) {
+          if (firstImage.startsWith("http://") || firstImage.startsWith("https://")) {
+              // Se a URL já é completa (IPFS/Filebase), usa ela diretamente
+              carouselImageUrl = firstImage 
+          } else {
+              // Fallback para caminhos locais antigos, prefixando com a API
+              carouselImageUrl = `${API_URL}/uploads/${firstImage}` 
+          }
+      }
+
+      return {
           id: item.id,
           title: item.nome,
           subtitle: item.endereco,
-          image: firstImage ? `${API_URL}/uploads/${firstImage}` : null,
-        }
-      })
+          image: carouselImageUrl,
+      }
+    })
     : [
         { id: "placeholder-1", title: "Bem-vindo", subtitle: "Encontre sua academia", image: null },
         { id: "placeholder-2", title: "Treine hoje", subtitle: "Procure perto de você", image: null },
@@ -171,8 +185,18 @@ export default function AcademiasPage() {
       <section className="max-w-6xl mx-auto px-4 pb-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {academias.map((item, idx) => {
-            const firstImage = item.imagens?.[0]?.url || item.imagem || null
-            const imageUrl = firstImage ? `${API_URL}/uploads/${firstImage}` : null
+            // Usando 'URL' em caixa alta
+            const firstImage = item.imagens?.[0]?.URL || item.imagem || null
+            
+            // 🚨 CORREÇÃO DE URL PARA O GRID DE CARDS
+            let imageUrl = null
+            if (firstImage) {
+                if (firstImage.startsWith("http://") || firstImage.startsWith("https://")) {
+                    imageUrl = firstImage // IPFS URL completa
+                } else {
+                    imageUrl = `${API_URL}/uploads/${firstImage}` // Fallback
+                }
+            }
 
             return (
               <Link href={`/academia/${item.id ?? idx}`} key={item.id ?? idx} className="block">
