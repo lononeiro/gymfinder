@@ -1,8 +1,6 @@
 package DB
 
 import (
-	"fmt"
-	"os"
 	"strings"
 
 	"github.com/lononeiro/gymfinder/backend/src/model"
@@ -48,34 +46,27 @@ func ListarAcademias(db *gorm.DB) ([]model.Academia, error) {
 		return nil, err
 	}
 
-	// 🔥 CORREÇÃO: Ajuste automático de imagens antigas
-	bucket := strings.TrimSpace(os.Getenv("FILEBASE_BUCKET"))
-	apiBase := strings.TrimSpace(os.Getenv("API_BASE_URL")) // ex: https://gymfinder-1.onrender.com
+	// -------------- CONFIGURAÇÃO DO SEU GATEWAY -----------------
+	// Seu gateway personalizado do Filebase
+	const gateway = "https://future-coffee-galliform.myfilebase.com/ipfs/"
+	// ----------------------------------------------------------------
 
 	for ai := range academias {
 		for ii := range academias[ai].Imagens {
 
 			img := &academias[ai].Imagens[ii]
 
-			// já é uma URL completa → nada a corrigir
+			if img.URL == "" {
+				continue
+			}
+
+			// Se já começa com http, não mexe
 			if strings.HasPrefix(img.URL, "http://") || strings.HasPrefix(img.URL, "https://") {
 				continue
 			}
 
-			// tentar montar URL Filebase/S3
-			if bucket != "" {
-				img.URL = fmt.Sprintf("https://s3.filebase.com/%s/%s", bucket, img.URL)
-				continue
-			}
-
-			// fallback: URL pública do backend
-			if apiBase != "" {
-				img.URL = fmt.Sprintf("%s/uploads/%s", strings.TrimRight(apiBase, "/"), img.URL)
-				continue
-			}
-
-			// último caso: URL relativa
-			img.URL = fmt.Sprintf("/uploads/%s", img.URL)
+			// Se veio apenas um CID ou nome, prefixa com seu gateway personalizado
+			img.URL = gateway + strings.TrimPrefix(img.URL, "/")
 		}
 	}
 
