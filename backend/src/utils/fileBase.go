@@ -128,8 +128,12 @@ func UploadToFilebase(file multipart.File, filename string) (string, error) {
 	}
 
 	// MONTA URL com SEU gateway Filebase
-	url := fmt.Sprintf("https://future-coffee-galliform.myfilebase.com/ipfs/%s", cid)
+	gateway := os.Getenv("FILEBASE_GATEWAY")
+	if gateway == "" {
+		gateway = "https://ipfs.filebase.io" // fallback
+	}
 
+	url := fmt.Sprintf("%s/ipfs/%s", gateway, cid)
 	return url, nil
 }
 

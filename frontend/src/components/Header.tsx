@@ -53,7 +53,7 @@ export default function Header() {
               </span>
               <button
                 onClick={handleLogout}
-                className="text-sm text-red-500 hover:text-red-600 transition, mouseover:underline"
+                className="text-sm text-red-500 hover:text-red-600 transition, mouse"
               >
                 Sair
               </button>
@@ -64,4 +64,3 @@ export default function Header() {
     </header>
   );
 }
-
