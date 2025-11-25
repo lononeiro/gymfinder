@@ -82,16 +82,13 @@ func UploadToFilebase(file multipart.File, filename string) (string, error) {
 		return "", fmt.Errorf("erro no upload: %w", err)
 	}
 
-	// ===== Buscar CID no metadata =====
-
-	// ===== Buscar CID no metadata =====
-
-	// ===== Buscar CID (com polling) =====
+	// ===== Buscar CID com polling =====
 
 	var head *s3.HeadObjectOutput
 	cid := ""
 
 	for attempt := 1; attempt <= 10; attempt++ {
+
 		head, err = client.HeadObject(&s3.HeadObjectInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(filename),
@@ -101,10 +98,10 @@ func UploadToFilebase(file multipart.File, filename string) (string, error) {
 			return "", fmt.Errorf("erro no HeadObject: %w", err)
 		}
 
-		// procurar campo "cid" ou "Cid" na metadata
+		// procurar campo "cid" ou algo contendo "cid"
 		if head.Metadata != nil {
 			for k, v := range head.Metadata {
-				if v != nil && (strings.ToLower(k) == "cid" || strings.Contains(strings.ToLower(k), "cid")) {
+				if v != nil && strings.Contains(strings.ToLower(k), "cid") {
 					cid = *v
 					break
 				}
@@ -122,7 +119,7 @@ func UploadToFilebase(file multipart.File, filename string) (string, error) {
 		return "", fmt.Errorf("CID não encontrado no metadata: %+v", head.Metadata)
 	}
 
-	// ===== MONTA URL FINAL EXATAMENTE COMO VOCÊ QUER =====
+	// ===== Monta URL final no formato correto =====
 
 	gateway := strings.TrimSpace(os.Getenv("FILEBASE_GATEWAY"))
 	if gateway == "" {
@@ -132,7 +129,6 @@ func UploadToFilebase(file multipart.File, filename string) (string, error) {
 	url := fmt.Sprintf("%s/ipfs/%s", gateway, cid)
 
 	return url, nil
-
 }
 
 func getContentType(filename string) string {
