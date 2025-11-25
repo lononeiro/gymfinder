@@ -48,7 +48,7 @@ func ListarAcademias(db *gorm.DB) ([]model.Academia, error) {
 
 	// -------------- CONFIGURAÇÃO DO SEU GATEWAY -----------------
 	// Seu gateway personalizado do Filebase
-	const gateway = "https://future-coffee-galliform.myfilebase.com/ipfs/"
+	const gateway = "https://future-coffee-galliform.myfilebase.com/"
 	// ----------------------------------------------------------------
 
 	for ai := range academias {
