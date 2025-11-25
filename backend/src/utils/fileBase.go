@@ -86,30 +86,25 @@ func UploadToFilebase(file multipart.File, filename string) (string, error) {
 
 	// ===== Buscar CID no metadata =====
 
+	// ===== Buscar CID (com polling) =====
+
 	var head *s3.HeadObjectOutput
 	cid := ""
 
-	for attempt := 1; attempt <= 15; attempt++ {
-
+	for attempt := 1; attempt <= 10; attempt++ {
 		head, err = client.HeadObject(&s3.HeadObjectInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(filename),
 		})
+
 		if err != nil {
-			time.Sleep(300 * time.Millisecond)
-			continue
+			return "", fmt.Errorf("erro no HeadObject: %w", err)
 		}
 
-		for k, v := range head.Metadata {
-			if v == nil {
-				continue
-			}
-
-			key := strings.ToLower(k)
-
-			// Agora buscamos pelo metadata real do seu bucket: “Cid”
-			if key == "cid" || key == "ipfs-hash" || strings.Contains(key, "cid") {
-				if *v != "" {
+		// procurar campo "cid" ou "Cid" na metadata
+		if head.Metadata != nil {
+			for k, v := range head.Metadata {
+				if v != nil && (strings.ToLower(k) == "cid" || strings.Contains(strings.ToLower(k), "cid")) {
 					cid = *v
 					break
 				}
@@ -120,21 +115,24 @@ func UploadToFilebase(file multipart.File, filename string) (string, error) {
 			break
 		}
 
-		time.Sleep(400 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
 	}
 
 	if cid == "" {
 		return "", fmt.Errorf("CID não encontrado no metadata: %+v", head.Metadata)
 	}
 
-	// MONTA URL com SEU gateway Filebase
-	gateway := os.Getenv("FILEBASE_GATEWAY")
+	// ===== MONTA URL FINAL EXATAMENTE COMO VOCÊ QUER =====
+
+	gateway := strings.TrimSpace(os.Getenv("FILEBASE_GATEWAY"))
 	if gateway == "" {
-		gateway = "https://ipfs.filebase.io" // fallback
+		gateway = "https://future-coffee-galliform.myfilebase.com"
 	}
 
 	url := fmt.Sprintf("%s/ipfs/%s", gateway, cid)
+
 	return url, nil
+
 }
 
 func getContentType(filename string) string {
