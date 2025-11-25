@@ -84,6 +84,8 @@ func UploadToFilebase(file multipart.File, filename string) (string, error) {
 
 	// ===== Buscar CID no metadata =====
 
+	// ===== Buscar CID no metadata =====
+
 	var head *s3.HeadObjectOutput
 	cid := ""
 
@@ -98,7 +100,6 @@ func UploadToFilebase(file multipart.File, filename string) (string, error) {
 			continue
 		}
 
-		// Filebase usa "Ipfs-Hash"
 		for k, v := range head.Metadata {
 			if v == nil {
 				continue
@@ -106,7 +107,8 @@ func UploadToFilebase(file multipart.File, filename string) (string, error) {
 
 			key := strings.ToLower(k)
 
-			if key == "ipfs-hash" || strings.Contains(key, "ipfs") {
+			// Agora buscamos pelo metadata real do seu bucket: “Cid”
+			if key == "cid" || key == "ipfs-hash" || strings.Contains(key, "cid") {
 				if *v != "" {
 					cid = *v
 					break
