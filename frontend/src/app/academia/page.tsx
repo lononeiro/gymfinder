@@ -166,7 +166,10 @@ export default function AcademiasPage() {
                   tabIndex={0}
                 >
                   {imageUrl ? (
-                    <img src={imageUrl} alt={item.nome} className="w-full h-48 object-cover" />
+                    <>
+                      <img src={imageUrl} alt={item.nome} className="w-full h-48 object-cover" />
+                      {console.log("Using full URL for image:", imageUrl)}
+                    </>
                   ) : (
                     <div className="w-full h-48 flex items-center justify-center bg-slate-100">Sem imagem</div>
                   )}
