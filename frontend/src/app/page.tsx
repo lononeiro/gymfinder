@@ -193,6 +193,7 @@ export default function AcademiasPage() {
             if (firstImage) {
                 if (firstImage.startsWith("http://") || firstImage.startsWith("https://")) {
                     imageUrl = firstImage // IPFS URL completa
+                    console.log("Using full URL for image:", imageUrl)
                 } else {
                     imageUrl = `${API_URL}/uploads/${firstImage}` // Fallback
                 }
