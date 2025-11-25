@@ -50,14 +50,14 @@ func NewFilebaseSession() (*session.Session, error) {
 func UploadToFilebase(file multipart.File, filename string) (string, error) {
 	defer file.Close()
 
-	// Lê arquivo para memória
+	// Lê arquivo para buffer
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(file)
 	if err != nil {
 		return "", fmt.Errorf("erro ao ler arquivo: %w", err)
 	}
 
-	// Sessão S3 Filebase
+	// Sessão Filebase
 	sess, err := NewFilebaseSession()
 	if err != nil {
 		return "", err
@@ -82,29 +82,32 @@ func UploadToFilebase(file multipart.File, filename string) (string, error) {
 		return "", fmt.Errorf("erro no upload: %w", err)
 	}
 
-	// ===== Buscar CID (com polling) =====
+	// ===== Buscar CID no metadata =====
 
 	var head *s3.HeadObjectOutput
 	cid := ""
 
-	for attempt := 1; attempt <= 10; attempt++ {
+	for attempt := 1; attempt <= 15; attempt++ {
 
 		head, err = client.HeadObject(&s3.HeadObjectInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(filename),
 		})
-
 		if err != nil {
-			return "", fmt.Errorf("erro no HeadObject: %w", err)
+			time.Sleep(300 * time.Millisecond)
+			continue
 		}
 
-		// Procurar por qualquer chave contendo "cid"
-		if head.Metadata != nil {
-			for k, v := range head.Metadata {
-				if v == nil {
-					continue
-				}
-				if strings.Contains(strings.ToLower(k), "cid") && *v != "" {
+		// Filebase usa "Ipfs-Hash"
+		for k, v := range head.Metadata {
+			if v == nil {
+				continue
+			}
+
+			key := strings.ToLower(k)
+
+			if key == "ipfs-hash" || strings.Contains(key, "ipfs") {
+				if *v != "" {
 					cid = *v
 					break
 				}
@@ -115,23 +118,19 @@ func UploadToFilebase(file multipart.File, filename string) (string, error) {
 			break
 		}
 
-		// Debug opcional
-		fmt.Printf("Tentativa %d: CID ainda não disponível. Metadata: %+v\n", attempt, head.Metadata)
-
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(400 * time.Millisecond)
 	}
 
 	if cid == "" {
-		return "", fmt.Errorf("CID não encontrado após polling. Metadata final: %+v", head.Metadata)
+		return "", fmt.Errorf("CID não encontrado no metadata: %+v", head.Metadata)
 	}
 
-	// Montar URL pública IPFS
-	url := fmt.Sprintf("https://ipfs.filebase.io/ipfs/%s", cid)
+	// MONTA URL com SEU gateway Filebase
+	url := fmt.Sprintf("https://future-coffee-galliform.myfilebase.com/ipfs/%s", cid)
 
 	return url, nil
 }
 
-// Detecta Content-Type
 func getContentType(filename string) string {
 	lower := strings.ToLower(filename)
 	switch {
@@ -148,7 +147,6 @@ func getContentType(filename string) string {
 	}
 }
 
-// Testa conexão com Filebase
 func TestFilebaseConnection() error {
 	sess, err := NewFilebaseSession()
 	if err != nil {
@@ -164,7 +162,6 @@ func TestFilebaseConnection() error {
 
 	fmt.Println("🔍 Testando acesso ao Filebase...")
 
-	// Testar listagem de buckets
 	_, err = client.ListBuckets(&s3.ListBucketsInput{})
 	if err != nil {
 		return fmt.Errorf("erro ao listar buckets: %w", err)
