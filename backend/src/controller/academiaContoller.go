@@ -93,6 +93,7 @@ func AdicionarAcademia(w http.ResponseWriter, r *http.Request) {
 
 		// Salva a URL COMPLETA no banco
 		imagens = append(imagens, model.Imagem{URL: url})
+		fmt.Println(imagens)
 	}
 
 	created, err := repository.CreateAcademia(academia, imagens)
