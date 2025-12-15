@@ -10,23 +10,27 @@ import (
 const UploadPath = "./uploads"
 
 func CreateAcademia(db *gorm.DB, academia model.Academia, imagens []model.Imagem) (model.Academia, error) {
-	err := db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(&academia).Error; err != nil {
-			return err
-		}
+	tx := db.Begin()
 
-		for i := range imagens {
-			imagens[i].AcademiaID = academia.ID
-		}
+	if err := tx.Create(&academia).Error; err != nil {
+		tx.Rollback()
+		return academia, err
+	}
 
-		if len(imagens) > 0 {
-			if err := tx.Create(&imagens).Error; err != nil {
-				return err
-			}
+	for i := range imagens {
+		imagens[i].AcademiaID = academia.ID
+
+		if err := tx.Create(&imagens[i]).Error; err != nil {
+			tx.Rollback()
+			return academia, err
 		}
-		return nil
-	})
-	return academia, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return academia, err
+	}
+
+	return academia, nil
 }
 
 func SelecionarAcademiaPoriD(db *gorm.DB, id uint) (model.Academia, error) {

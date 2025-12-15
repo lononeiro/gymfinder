@@ -16,6 +16,7 @@ export default function AcademiasPage() {
       const res = await fetch(`${API_URL}/academias`, { cache: "no-store" })
       const data = await res.json()
       setAcademias(Array.isArray(data) ? data : [])
+      console.log("Academias fetched:", data)
     } catch (err) {
       console.error("Erro ao buscar academias", err)
       setAcademias([])
