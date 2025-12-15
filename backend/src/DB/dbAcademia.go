@@ -1,8 +1,6 @@
 package DB
 
 import (
-	"strings"
-
 	"github.com/lononeiro/gymfinder/backend/src/model"
 	"gorm.io/gorm"
 )
@@ -39,9 +37,7 @@ func SelecionarAcademiaPoriD(db *gorm.DB, id uint) (model.Academia, error) {
 	return academia, err
 }
 
-// ListarAcademias AGORA NÃO PREFIXA MAIS A URL, POIS ELA JÁ DEVE ESTAR COMPLETA NO BANCO
-// DB/DB.go
-
+// ListarAcademias retorna academias com imagens e define a imagem principal
 func ListarAcademias(db *gorm.DB) ([]model.Academia, error) {
 	var academias []model.Academia
 
@@ -50,27 +46,10 @@ func ListarAcademias(db *gorm.DB) ([]model.Academia, error) {
 		return nil, err
 	}
 
-	// -------------- CONFIGURAÇÃO DO SEU GATEWAY -----------------
-	// Seu gateway personalizado do Filebase
-	const gateway = "https://future-coffee-galliform.myfilebase.com/"
-	// ----------------------------------------------------------------
-
-	for ai := range academias {
-		for ii := range academias[ai].Imagens {
-
-			img := &academias[ai].Imagens[ii]
-
-			if img.URL == "" {
-				continue
-			}
-
-			// Se já começa com http, não mexe
-			if strings.HasPrefix(img.URL, "http://") || strings.HasPrefix(img.URL, "https://") {
-				continue
-			}
-
-			// Se veio apenas um CID ou nome, prefixa com seu gateway personalizado
-			img.URL = gateway + strings.TrimPrefix(img.URL, "/")
+	// Define a imagem principal para cada academia (primeira imagem do array)
+	for i := range academias {
+		if len(academias[i].Imagens) > 0 {
+			academias[i].ImagemPrincipal = academias[i].Imagens[0].URL
 		}
 	}
 
