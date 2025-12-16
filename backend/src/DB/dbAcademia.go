@@ -41,7 +41,7 @@ func SelecionarAcademiaPoriD(db *gorm.DB, id uint) (model.Academia, error) {
 func ListarAcademias(db *gorm.DB) ([]model.Academia, error) {
 	var academias []model.Academia
 
-	err := db.Preload("Imagems").Find(&academias).Error
+	err := db.Preload("Imagens").Find(&academias).Error
 	if err != nil {
 		return nil, err
 	}
