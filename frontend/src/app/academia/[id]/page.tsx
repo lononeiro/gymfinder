@@ -60,7 +60,7 @@ export default function AcademiaDetalhePage() {
     setLoading(true);
     Promise.all([
       fetch(`${API_URL}/academia/${id}`).then((r) => r.json()),
-      fetch(`${API_URL}/academia/${id}/comentarios`).then((r) => r.json()).catch(() => []),
+      fetch(`${API_URL}/academia/${id}/comentario`).then((r) => r.json()).catch(() => []),
     ])
       .then(([acadData, comms]) => {
         setAcademia(acadData);
