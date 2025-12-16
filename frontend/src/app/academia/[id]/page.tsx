@@ -29,13 +29,7 @@ export default function AcademiaDetalhePage() {
 
     if (!value) return null;
 
-    // se já for URL absoluta, retorna direto
-    if (value.startsWith("http://") || value.startsWith("https://")) {
-      return value;
-    }
-
-    // caso seja apenas nome do arquivo (local), prefixa com API_URL/uploads
-    return `${API_URL.replace(/\/$/, "")}/uploads/${value.replace(/^\/+/, "")}`;
+    return value
   }
 
   useEffect(() => {

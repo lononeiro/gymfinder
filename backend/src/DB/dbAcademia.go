@@ -50,6 +50,7 @@ func ListarAcademias(db *gorm.DB) ([]model.Academia, error) {
 	for i := range academias {
 		if len(academias[i].Imagens) > 0 {
 			academias[i].ImagemPrincipal = academias[i].Imagens[0].URL
+			fmt.Printf("DEBUG: Academia %d - ImagemPrincipal definida como: %s\n", academias[i].ID, academias[i].ImagemPrincipal)
 		}
 	}
 
