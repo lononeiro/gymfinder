@@ -132,7 +132,7 @@ export default function AcademiaDetalhePage() {
           <CommentForm
             academiaId={academia.id}
             onSuccess={() => {
-              fetch(`${API_URL}/academias/${id}/comentarios`).then((r) => r.json()).then((comms) => {
+              fetch(`${API_URL}/academia/${id}/comentario`).then((r) => r.json()).then((comms) => {
                 setComentarios(Array.isArray(comms) ? comms : []);
               });
             }}
