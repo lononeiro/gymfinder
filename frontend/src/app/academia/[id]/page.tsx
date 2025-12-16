@@ -96,7 +96,7 @@ export default function AcademiaDetalhePage() {
             {imagens.map((src: string, i: number) => (
               <img
                 key={i}
-                src={src}
+                src={src.replace("https://gymfinder-1.onrender.com/uploads/", "")}
                 alt={`${academia.nome} - ${i + 1}`}
                 className="w-full max-w-[600px] h-auto object-cover rounded"
                 loading="lazy"
