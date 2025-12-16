@@ -82,7 +82,7 @@ export default function AcademiaDetalhePage() {
   const imagens =
     academia.imagens && academia.imagens.length > 0
       ? academia.imagens
-          .map((img: any) => normalizeImage(img))
+          .map((img: any) => img)
           .filter((u: any) => !!u)
       : [];
 
@@ -101,8 +101,7 @@ export default function AcademiaDetalhePage() {
                 className="w-full max-w-[600px] h-auto object-cover rounded"
                 loading="lazy"
                 onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "/placeholder.png";
+                  <h1>Erro ao carregar imagem {src}</h1>;
                 }}
               />
             ))}
