@@ -7,6 +7,6 @@ type Academia struct {
 	Telefone        string   `json:"telefone"`
 	Preco           string   `json:"preco"`
 	Descricao       string   `json:"descricao"`
-	Imagens         []Imagem `json:"imagens" gorm:"foreignKey:AcademiaID"`
+	Imagens         []Imagem `json:"imagens" gorm:"foreignKey:AcademiaID;references:ID"`
 	ImagemPrincipal string   `json:"imagem_principal" gorm:"-"`
 }

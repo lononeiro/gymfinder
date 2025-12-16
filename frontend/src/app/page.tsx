@@ -29,26 +29,14 @@ export default function AcademiasPage() {
   // --- Carousel logic ---
   const slides = academias.length
     ? academias.map((item) => {
-      // Usando 'URL' em caixa alta, conforme o padrão Go/GORM
-      const firstImage = item.imagens?.[0]?.URL || item.imagem || null
-      
-      // 🚨 CORREÇÃO DE URL PARA O CARROSSEL
-      let carouselImageUrl = null
-      if (firstImage) {
-          if (firstImage.startsWith("http://") || firstImage.startsWith("https://")) {
-              // Se a URL já é completa (IPFS/Filebase), usa ela diretamente
-              carouselImageUrl = firstImage 
-          } else {
-              // Fallback para caminhos locais antigos, prefixando com a API
-              carouselImageUrl = `${API_URL}/uploads/${firstImage}` 
-          }
-      }
+      // Usando apenas imagem_principal - mais simples e consistente
+      const imageUrl = item.imagem_principal || null
 
       return {
           id: item.id,
           title: item.nome,
           subtitle: item.endereco,
-          image: carouselImageUrl,
+          image: imageUrl,
       }
     })
     : [
@@ -185,19 +173,8 @@ export default function AcademiasPage() {
       <section className="max-w-6xl mx-auto px-4 pb-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {academias.map((item, idx) => {
-            // Usando 'URL' em caixa alta
-            const firstImage = item.imagens?.[0]?.URL || item.imagem || null
-            
-            // 🚨 CORREÇÃO DE URL PARA O GRID DE CARDS
-            let imageUrl = null
-            if (firstImage) {
-                if (firstImage.startsWith("http://") || firstImage.startsWith("https://")) {
-                    imageUrl = firstImage // IPFS URL completa
-                    console.log("Using full URL for image:", imageUrl)
-                } else {
-                    imageUrl = `${API_URL}/uploads/${firstImage}` // Fallback
-                }
-            }
+            // Usando apenas imagem_principal - mais simples e consistente
+            const imageUrl = item.imagem_principal || null
 
             return (
               <Link href={`/academia/${item.id ?? idx}`} key={item.id ?? idx} className="block">

@@ -30,14 +30,11 @@ export default function AcademiasPage() {
   // --- Carousel logic ---
   const slides = academias.length
     ? academias.map((item) => {
-        const imageName =
-          (typeof item.imagem === "string" ? item.imagem : item.imagem?.nome_arquivo) ??
-          item.imagens?.[0]?.url
         return {
           id: item.id,
           title: item.nome,
           subtitle: item.endereco,
-          image: imageName ? `${API_URL}/uploads/${imageName}` : null,
+          image: item.imagem_principal || null,
         }
       })
     : [
@@ -153,9 +150,7 @@ export default function AcademiasPage() {
       <section className="max-w-6xl mx-auto px-4 pb-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {academias.map((item, idx) => {
-            const imageName =
-              (typeof item.imagem === "string" ? item.imagem : item.imagem?.nome_arquivo) ?? item.imagens?.[0]?.url
-            const imageUrl = imageName ? `${API_URL}/uploads/${imageName}` : null
+            const imageUrl = item.imagem_principal || null
 
             return (
               <Link href={`/academia/${item.id ?? idx}`} key={item.id ?? idx} className="block">
