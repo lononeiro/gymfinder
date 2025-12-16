@@ -40,7 +40,6 @@ export default function AcademiaDetalhePage() {
   // Normaliza o valor que pode ser: string (nome do arquivo ou URL) ou objeto { url, nome_arquivo }
   function normalizeImage(item: any): string | null {
     if (!item) return null;
-    console.log("Imagens antes de normalizar:", imagens);
 
     // extrai o campo que pode ser string ou objeto
     let value: string | undefined | null;
@@ -51,7 +50,7 @@ export default function AcademiaDetalhePage() {
     }
 
     if (!value) return null;
-    
+
     return normalizeImageUrl(value);
   }
 
@@ -82,7 +81,7 @@ export default function AcademiaDetalhePage() {
   const imagens =
     academia.imagens && academia.imagens.length > 0
       ? academia.imagens
-          .map((img: any) => img)
+          .map((img: any) => normalizeImage(img))
           .filter((u: any) => !!u)
       : [];
 
@@ -96,19 +95,16 @@ export default function AcademiaDetalhePage() {
             {imagens.map((src: string, i: number) => (
               <img
                 key={i}
-                src={src.replace("https://gymfinder-1.onrender.com/uploads/", "")}
+                src={src}
                 alt={`${academia.nome} - ${i + 1}`}
                 className="w-full max-w-[600px] h-auto object-cover rounded"
                 loading="lazy"
                 onError={(e) => {
-                  <h1>Erro ao carregar imagem {src}</h1>;
+                  console.error(`Erro ao carregar imagem: ${src}`);
+                  // Esconde a imagem com erro
+                  (e.target as HTMLImageElement).style.display = 'none';
                 }}
               />
-            ))}
-            {imagens.map((src: string, i: number) => (
-              <div key={i} style={{ display: 'none' }}>
-                <h1>{src}</h1>
-              </div>
             ))}
           </div>
         ) : (
