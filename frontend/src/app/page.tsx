@@ -179,7 +179,9 @@ export default function AcademiasPage() {
             return (
               <Link href={`/academia/${item.id}`} key={item.id}>
                 <div
-                  ref={(el) => (cardRefs.current[item.id] = el)}
+                  ref={(el) => {
+                    if (el) cardRefs.current[item.id] = el
+                  }}
                   className="rounded-xl overflow-hidden bg-white shadow-sm border opacity-0 translate-y-6 transition-all duration-500 hover:shadow-md cursor-pointer"
                 >
                   {imageUrl ? (
