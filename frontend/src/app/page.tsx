@@ -186,7 +186,7 @@ export default function AcademiasPage() {
                 >
                   {imageUrl ? (
                     <img
-                      src={imageUrl}
+                      src={imageUrl.replace("https://gymfinder-1.onrender.com/uploads/", "")}
                       alt={item.nome}
                       className="w-full h-48 object-cover"
                       loading="lazy"
