@@ -107,7 +107,7 @@ export default function AcademiaDetalhePage() {
             ))}
             {imagens.map((src: string, i: number) => (
               <div key={i} style={{ display: 'none' }}>
-                <h1>{i}</h1>
+                <h1>{src}</h1>
               </div>
             ))}
           </div>
