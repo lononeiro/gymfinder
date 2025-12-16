@@ -26,8 +26,11 @@ function normalizeImageUrl(url?: string | null): string | null {
   if (!url) return null
 
   // remove prefixo errado do backend
-  if (url.includes("/uploads/https://")) {
-    return url.replace(/^.*\/uploads\//, "")
+  if (url.includes("https://gymfinder-1.onrender.com/uploads/https://")) {
+    return url.replace(
+      "https://gymfinder-1.onrender.com/uploads/https://",
+      ""
+    )
   }
 
   return url
