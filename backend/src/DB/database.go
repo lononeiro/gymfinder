@@ -14,7 +14,8 @@ var DataBase *gorm.DB
 func ConnectAndMigrate() {
 	dsn := config.LoadDSN()
 
-	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{PrepareStmt: false})
+
 	if err != nil {
 		log.Fatal("failed to connect database:", err)
 	}
