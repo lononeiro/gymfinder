@@ -25,12 +25,14 @@ type Academia = {
 function normalizeImageUrl(url?: string | null): string | null {
   if (!url) return null
 
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    return url
+  // remove prefixo errado do backend
+  if (url.includes("/uploads/https://")) {
+    return url.replace(/^.*\/uploads\//, "")
   }
 
-  return `{url}`
+  return url
 }
+
 
 
 export default function AcademiasPage() {
