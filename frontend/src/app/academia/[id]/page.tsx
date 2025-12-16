@@ -40,6 +40,7 @@ export default function AcademiaDetalhePage() {
   // Normaliza o valor que pode ser: string (nome do arquivo ou URL) ou objeto { url, nome_arquivo }
   function normalizeImage(item: any): string | null {
     if (!item) return null;
+    console.log("Imagens antes de normalizar:", imagens);
 
     // extrai o campo que pode ser string ou objeto
     let value: string | undefined | null;
