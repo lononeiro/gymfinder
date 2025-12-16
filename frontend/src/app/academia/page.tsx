@@ -36,13 +36,20 @@ function normalizeImageUrl(url?: string | null): string | null {
   return url
 }
 
-export function resolveImageUrl(image?: string) {
+export function resolveImageUrl(image?: string | null) {
   if (!image) return "/placeholder.png";
 
+  // Se já tem protocolo, retorna como está
   if (image.startsWith("http://") || image.startsWith("https://")) {
     return image;
   }
 
+  // Se é URL do Filebase sem protocolo, adiciona https://
+  if (image.includes("myfilebase.com") || image.includes("ipfs/")) {
+    return `https://${image}`;
+  }
+
+  // Caso contrário, é um arquivo local no servidor
   return `${process.env.NEXT_PUBLIC_API_URL}/uploads/${image}`;
 }
 
