@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import CommentForm from "@/components/CommentForm";
+import { resolveImageUrl, extractImageUrl } from "@/lib/imageUtils";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://gymfinder-1.onrender.com";
 
@@ -13,24 +14,6 @@ export default function AcademiaDetalhePage() {
   const [academia, setAcademia] = useState<any>(null);
   const [comentarios, setComentarios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [novoComentario, setNovoComentario] = useState("");
-
-  // Normaliza o valor que pode ser: string (nome do arquivo ou URL) ou objeto { url, nome_arquivo }
-  function normalizeImage(item: any): string | null {
-    if (!item) return null;
-
-    // extrai o campo que pode ser string ou objeto
-    let value: string | undefined | null;
-    if (typeof item === "string") {
-      value = item;
-    } else if (typeof item === "object") {
-      value = item.url || item.nome_arquivo || null;
-    }
-
-    if (!value) return null;
-
-    return value
-  }
 
   useEffect(() => {
     if (!id) return;
@@ -55,14 +38,15 @@ export default function AcademiaDetalhePage() {
   if (loading) return <div className="p-6">Carregando...</div>;
   if (!academia) return <div className="p-6">Academia não encontrada.</div>;
 
-  // monta array de imagens normalizadas
-  const imagens =
-    academia.imagens && academia.imagens.length > 0
-      ? academia.imagens
-          .map((img: any) => normalizeImage(img))
-          .filter((u: any) => !!u)
-      : [];
-    console.log("Imagens normalizadas:", imagens);
+  // Monta array de imagens normalizadas
+  const imagens = academia.imagens
+    ?.map((img: any) => {
+      const url = extractImageUrl(img);
+      return resolveImageUrl(url);
+    })
+    .filter(Boolean) || [];
+
+  console.log("Imagens normalizadas:", imagens);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -123,4 +107,4 @@ export default function AcademiaDetalhePage() {
       </div>
     </div>
   );
-}
+}       

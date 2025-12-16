@@ -2,13 +2,9 @@
 
 import React, { useEffect, useRef, useState } from "react"
 import Link from "next/link"
+import { resolveImageUrl } from "@/lib/imageUtils"
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://gymfinder-1.onrender.com"
-
-// 🔧 Ajuste centralizado do gateway Filebase
-const FILEBASE_GATEWAY =
-  "https://future-coffee-galliform.myfilebase.com/ipfs/"
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://gymfinder-1.onrender.com"
 
 type Academia = {
   id: number
@@ -21,45 +17,10 @@ type Academia = {
   imagens?: { id: number; url: string }[]
 }
 
-// Normaliza qualquer URL vinda do backend
-function normalizeImageUrl(url?: string | null): string | null {
-  if (!url) return null
-
-  // remove prefixo errado do backend
-  if (url.includes("https://gymfinder-1.onrender.com/uploads/https://")) {
-    return url.replace(
-      "https://gymfinder-1.onrender.com/uploads/https://",
-      ""
-    )
-  }
-
-  return url
-}
-
-export function resolveImageUrl(image?: string | null) {
-  if (!image) return "/placeholder.png";
-
-  // Se já tem protocolo, retorna como está
-  if (image.startsWith("http://") || image.startsWith("https://")) {
-    return image;
-  }
-
-  // Se é URL do Filebase sem protocolo, adiciona https://
-  if (image.includes("myfilebase.com") || image.includes("ipfs/")) {
-    return `https://${image}`;
-  }
-
-  // Caso contrário, é um arquivo local no servidor
-  return `${process.env.NEXT_PUBLIC_API_URL}/uploads/${image}`;
-}
-
-
 export default function AcademiasPage() {
   const [academias, setAcademias] = useState<Academia[]>([])
   const [currentSlide, setCurrentSlide] = useState(0)
   const autoPlayRef = useRef<number | null>(null)
-
-  // Refs por ID (mais seguro)
   const cardRefs = useRef<Record<number, HTMLDivElement | null>>({})
 
   async function fetchAcademias() {
@@ -68,7 +29,6 @@ export default function AcademiasPage() {
       const data = await res.json()
 
       const parsed = Array.isArray(data) ? data : []
-
       setAcademias(parsed)
       console.log("Academias fetched:", parsed)
     } catch (err) {
@@ -87,7 +47,7 @@ export default function AcademiasPage() {
         id: item.id,
         title: item.nome,
         subtitle: item.endereco,
-        image: normalizeImageUrl(item.imagem_principal),
+        image: resolveImageUrl(item.imagem_principal),
       }))
     : [
         {
@@ -158,11 +118,11 @@ export default function AcademiasPage() {
             className="absolute inset-0 flex transition-transform duration-700 ease-out"
             style={{ transform: `translateX(-${currentSlide * 100}%)` }}
           >
-            {slides.map((s, i) => (
+            {slides.map((s) => (
               <div key={s.id} className="w-full flex-shrink-0 relative">
                 {s.image ? (
                   <img
-                    src={resolveImageUrl(s.image)}
+                    src={s.image}
                     alt={s.title}
                     className="w-full h-[56vh] md:h-[60vh] lg:h-[68vh] object-cover"
                   />
@@ -203,7 +163,7 @@ export default function AcademiasPage() {
       <section className="max-w-6xl mx-auto px-4 pb-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {academias.map((item) => {
-            const imageUrl = normalizeImageUrl(item.imagem_principal)
+            const imageUrl = resolveImageUrl(item.imagem_principal)
 
             return (
               <Link href={`/academia/${item.id}`} key={item.id}>

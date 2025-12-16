@@ -2,9 +2,9 @@
 
 import React, { useEffect, useRef, useState } from "react"
 import Link from "next/link"
+import { resolveImageUrl } from "@/lib/imageUtils"
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://gymfinder-1.onrender.com"
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://gymfinder-1.onrender.com"
 
 type Academia = {
   id: number
@@ -17,29 +17,7 @@ type Academia = {
   imagens?: { id: number; url: string }[]
 }
 
-/**
- * Normaliza qualquer formato de URL de imagem vindo do backend
- */
-function normalizeImageUrl(url?: string | null): string | null {
-  if (!url) return null
-
-  let clean = url.trim()
-
-  // Remove prefixo errado: /uploads/https://...
-  if (clean.includes("/uploads/https://")) {
-    clean = clean.split("/uploads/")[1]
-  }
-
-  // Se já for URL absoluta válida, retorna direto
-  if (clean.startsWith("http://") || clean.startsWith("https://")) {
-    return clean
-  }
-
-  // Caso seja apenas nome de arquivo local
-  return `${API_URL.replace(/\/$/, "")}/uploads/${clean.replace(/^\/+/, "")}`
-}
-
-export default function AcademiasPage() {
+export default function HomePage() {
   const [academias, setAcademias] = useState<Academia[]>([])
   const [currentSlide, setCurrentSlide] = useState(0)
   const autoPlayRef = useRef<number | null>(null)
@@ -66,7 +44,7 @@ export default function AcademiasPage() {
         id: item.id,
         title: item.nome,
         subtitle: item.endereco,
-        image: normalizeImageUrl(item.imagem_principal),
+        image: resolveImageUrl(item.imagem_principal),
       }))
     : [
         {
@@ -116,7 +94,7 @@ export default function AcademiasPage() {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            ;(entry.target as HTMLDivElement).classList.add("is-visible")
+            (entry.target as HTMLDivElement).classList.add("is-visible")
           }
         })
       },
@@ -174,7 +152,7 @@ export default function AcademiasPage() {
       <section className="max-w-6xl mx-auto px-4 pb-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {academias.map((item) => {
-            const imageUrl = normalizeImageUrl(item.imagem_principal)
+            const imageUrl = resolveImageUrl(item.imagem_principal)
 
             return (
               <Link href={`/academia/${item.id}`} key={item.id}>

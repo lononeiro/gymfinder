@@ -126,6 +126,11 @@ func UploadToFilebase(file multipart.File, filename string) (string, error) {
 		gateway = "https://future-coffee-galliform.myfilebase.com"
 	}
 
+	// 🔥 GARANTIR que sempre tenha https://
+	if !strings.HasPrefix(gateway, "http://") && !strings.HasPrefix(gateway, "https://") {
+		gateway = "https://" + gateway
+	}
+
 	url := fmt.Sprintf("%s/ipfs/%s", gateway, cid)
 
 	return url, nil
