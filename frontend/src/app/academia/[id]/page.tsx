@@ -12,7 +12,7 @@ function normalizeImageUrl(url?: string | null): string | null {
   
   // Remove qualquer prefixo incorreto que possa estar vindo
   if (url.includes("gymfinder-1.onrender.com/uploads/https://")) {
-    return url.replace("gymfinder-1.onrender.com/uploads/https://", "https://");
+    return url.replace("gymfinder-1.onrender.com/uploads/https://", "");
   }
   
   // Se já começa com http ou https, retorna como está
@@ -26,9 +26,9 @@ function normalizeImageUrl(url?: string | null): string | null {
   }
   
   // Para imagens locais, usa o endpoint correto
-  return `${API_URL}/uploads/${url}`;
+  return url;
 }
-
+''
 export default function AcademiaDetalhePage() {
   const params = useParams();
   const id = params?.id;
