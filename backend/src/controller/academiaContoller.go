@@ -113,15 +113,6 @@ func AdicionarAcademia(w http.ResponseWriter, r *http.Request) {
 // ... (Resto das funções Listar, Editar, Apagar permanecem inalteradas)
 func ListarAcademias(w http.ResponseWriter, r *http.Request) {
 	academias := repository.ListarAcademias()
-	
-	// DEBUG: Log das URLs antes de enviar
-	for i, acad := range academias {
-		fmt.Printf("DEBUG Controller: Academia %d - ImagemPrincipal: %s\n", acad.ID, acad.ImagemPrincipal)
-		for j, img := range acad.Imagens {
-			fmt.Printf("DEBUG Controller: Academia %d - Imagem %d: %s\n", acad.ID, j, img.URL)
-		}
-	}
-	
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(academias)
