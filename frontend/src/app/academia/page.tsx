@@ -36,6 +36,15 @@ function normalizeImageUrl(url?: string | null): string | null {
   return url
 }
 
+export function resolveImageUrl(image?: string) {
+  if (!image) return "/placeholder.png";
+
+  if (image.startsWith("http://") || image.startsWith("https://")) {
+    return image;
+  }
+
+  return `${process.env.NEXT_PUBLIC_API_URL}/uploads/${image}`;
+}
 
 
 export default function AcademiasPage() {
@@ -146,7 +155,7 @@ export default function AcademiasPage() {
               <div key={s.id} className="w-full flex-shrink-0 relative">
                 {s.image ? (
                   <img
-                    src={s.image}
+                    src={resolveImageUrl(s.image)}
                     alt={s.title}
                     className="w-full h-[56vh] md:h-[60vh] lg:h-[68vh] object-cover"
                   />
