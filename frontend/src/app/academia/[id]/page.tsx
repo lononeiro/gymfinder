@@ -106,6 +106,11 @@ export default function AcademiaDetalhePage() {
                 }}
               />
             ))}
+            {imagens.map((src: string, i: number) => (
+              <div key={i} style={{ display: 'none' }}>
+                <h1>{i}</h1>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="w-full h-48 flex items-center justify-center bg-slate-100">
