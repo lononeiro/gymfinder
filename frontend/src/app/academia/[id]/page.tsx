@@ -3,9 +3,31 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import CommentForm from "@/components/CommentForm";
-import { resolveImageUrl, extractImageUrl } from "@/lib/imageUtils";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://gymfinder-1.onrender.com";
+
+// Função para normalizar URLs de imagem
+function normalizeImageUrl(url?: string | null): string | null {
+  if (!url) return null;
+  
+  // Remove qualquer prefixo incorreto que possa estar vindo
+  if (url.includes("gymfinder-1.onrender.com/uploads/https://")) {
+    return url.replace("gymfinder-1.onrender.com/uploads/https://", "https://");
+  }
+  
+  // Se já começa com http ou https, retorna como está
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+  
+  // Se parece ser uma URL do Filebase mas sem protocolo, adiciona https://
+  if (url.includes("future-coffee-galliform.myfilebase.com")) {
+    return `https://${url}`;
+  }
+  
+  // Para imagens locais, usa o endpoint correto
+  return `${API_URL}/uploads/${url}`;
+}
 
 export default function AcademiaDetalhePage() {
   const params = useParams();
@@ -14,6 +36,23 @@ export default function AcademiaDetalhePage() {
   const [academia, setAcademia] = useState<any>(null);
   const [comentarios, setComentarios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Normaliza o valor que pode ser: string (nome do arquivo ou URL) ou objeto { url, nome_arquivo }
+  function normalizeImage(item: any): string | null {
+    if (!item) return null;
+
+    // extrai o campo que pode ser string ou objeto
+    let value: string | undefined | null;
+    if (typeof item === "string") {
+      value = item;
+    } else if (typeof item === "object") {
+      value = item.url || item.nome_arquivo || null;
+    }
+
+    if (!value) return null;
+    
+    return normalizeImageUrl(value);
+  }
 
   useEffect(() => {
     if (!id) return;
@@ -38,13 +77,13 @@ export default function AcademiaDetalhePage() {
   if (loading) return <div className="p-6">Carregando...</div>;
   if (!academia) return <div className="p-6">Academia não encontrada.</div>;
 
-  // Monta array de imagens normalizadas
-  const imagens = academia.imagens
-    ?.map((img: any) => {
-      const url = extractImageUrl(img);
-      return resolveImageUrl(url);
-    })
-    .filter(Boolean) || [];
+  // monta array de imagens normalizadas
+  const imagens =
+    academia.imagens && academia.imagens.length > 0
+      ? academia.imagens
+          .map((img: any) => normalizeImage(img))
+          .filter((u: any) => !!u)
+      : [];
 
   console.log("Imagens normalizadas:", imagens);
 
@@ -60,7 +99,10 @@ export default function AcademiaDetalhePage() {
                 alt={`${academia.nome} - ${i + 1}`}
                 className="w-full max-w-[600px] h-auto object-cover rounded"
                 loading="lazy"
-                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/placeholder.png";
+                }}
               />
             ))}
           </div>
@@ -107,4 +149,4 @@ export default function AcademiaDetalhePage() {
       </div>
     </div>
   );
-}       
+}

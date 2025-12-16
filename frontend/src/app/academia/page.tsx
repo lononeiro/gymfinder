@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { resolveImageUrl } from "@/lib/imageUtils"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://gymfinder-1.onrender.com"
 
@@ -17,6 +16,29 @@ type Academia = {
   imagens?: { id: number; url: string }[]
 }
 
+// Função para normalizar URLs de imagem
+function normalizeImageUrl(url?: string | null): string | null {
+  if (!url) return null
+  
+  // Remove qualquer prefixo incorreto que possa estar vindo
+  if (url.includes("gymfinder-1.onrender.com/uploads/https://")) {
+    return url.replace("gymfinder-1.onrender.com/uploads/https://", "https://")
+  }
+  
+  // Se já começa com http ou https, retorna como está
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url
+  }
+  
+  // Se parece ser uma URL do Filebase mas sem protocolo, adiciona https://
+  if (url.includes("future-coffee-galliform.myfilebase.com")) {
+    return `https://${url}`
+  }
+  
+  // Para imagens locais, usa o endpoint correto
+  return `${API_URL}/uploads/${url}`
+}
+
 export default function AcademiasPage() {
   const [academias, setAcademias] = useState<Academia[]>([])
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -27,7 +49,6 @@ export default function AcademiasPage() {
     try {
       const res = await fetch(`${API_URL}/academias`, { cache: "no-store" })
       const data = await res.json()
-
       const parsed = Array.isArray(data) ? data : []
       setAcademias(parsed)
       console.log("Academias fetched:", parsed)
@@ -47,7 +68,7 @@ export default function AcademiasPage() {
         id: item.id,
         title: item.nome,
         subtitle: item.endereco,
-        image: resolveImageUrl(item.imagem_principal),
+        image: normalizeImageUrl(item.imagem_principal),
       }))
     : [
         {
@@ -70,7 +91,6 @@ export default function AcademiasPage() {
       setCurrentSlide((s) => (s + 1) % slides.length)
     }, 4000)
     return () => stopAutoPlay()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slides.length])
 
   function stopAutoPlay() {
@@ -118,13 +138,17 @@ export default function AcademiasPage() {
             className="absolute inset-0 flex transition-transform duration-700 ease-out"
             style={{ transform: `translateX(-${currentSlide * 100}%)` }}
           >
-            {slides.map((s) => (
+            {slides.map((s, i) => (
               <div key={s.id} className="w-full flex-shrink-0 relative">
                 {s.image ? (
                   <img
                     src={s.image}
                     alt={s.title}
                     className="w-full h-[56vh] md:h-[60vh] lg:h-[68vh] object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.src = "/placeholder.png"
+                    }}
                   />
                 ) : (
                   <div className="w-full h-[56vh] md:h-[60vh] lg:h-[68vh] flex items-center justify-center bg-gradient-to-r from-slate-300 via-slate-200 to-slate-300">
@@ -163,7 +187,7 @@ export default function AcademiasPage() {
       <section className="max-w-6xl mx-auto px-4 pb-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {academias.map((item) => {
-            const imageUrl = resolveImageUrl(item.imagem_principal)
+            const imageUrl = normalizeImageUrl(item.imagem_principal)
 
             return (
               <Link href={`/academia/${item.id}`} key={item.id}>
@@ -178,6 +202,10 @@ export default function AcademiasPage() {
                       src={imageUrl}
                       alt={item.nome}
                       className="w-full h-48 object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.src = "/placeholder.png"
+                      }}
                     />
                   ) : (
                     <div className="w-full h-48 flex items-center justify-center bg-slate-100">
