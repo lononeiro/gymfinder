@@ -152,3 +152,19 @@ func ApagarAcademia(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func ObterAcademiaPorID(w http.ResponseWriter, r *http.Request) {
+	id, ok := utils.RetornarIdURL(w, r)
+	if !ok {
+		return
+	}
+
+	academia, err := repository.ObterAcademiaPorID(id)
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error":"Erro ao obter academia: %s"}`, err.Error()), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(academia)
+}

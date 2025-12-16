@@ -19,6 +19,11 @@ var AcademiaRoutes = []Route{
 	},
 	{
 		URI:      "/academia/{id}",
+		Method:   "GET",
+		Function: controller.ObterAcademiaPorID,
+	},
+	{
+		URI:      "/academia/{id}",
 		Method:   "PUT",
 		Function: applyMiddlewares(controller.EditarAcademias, utils.AuthMiddleware, middleware.AdminOnly),
 	},

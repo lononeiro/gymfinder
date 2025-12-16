@@ -43,3 +43,8 @@ func ApagarAcademia(id uint) error {
 	err := DB.ApagarAcademia(DB.DataBase, id)
 	return err
 }
+
+func ObterAcademiaPorID(id uint) (model.Academia, error) {
+	academia, err := DB.SelecionarAcademiaPoriD(DB.DataBase, id)
+	return academia, err
+}
