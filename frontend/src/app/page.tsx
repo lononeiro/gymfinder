@@ -3,13 +3,47 @@
 import React, { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://gymfinder-1.onrender.com"
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://gymfinder-1.onrender.com"
+
+type Academia = {
+  id: number
+  nome: string
+  endereco: string
+  telefone?: string
+  preco?: string
+  descricao?: string
+  imagem_principal?: string | null
+  imagens?: { id: number; url: string }[]
+}
+
+/**
+ * Normaliza qualquer formato de URL de imagem vindo do backend
+ */
+function normalizeImageUrl(url?: string | null): string | null {
+  if (!url) return null
+
+  let clean = url.trim()
+
+  // Remove prefixo errado: /uploads/https://...
+  if (clean.includes("/uploads/https://")) {
+    clean = clean.split("/uploads/")[1]
+  }
+
+  // Se já for URL absoluta válida, retorna direto
+  if (clean.startsWith("http://") || clean.startsWith("https://")) {
+    return clean
+  }
+
+  // Caso seja apenas nome de arquivo local
+  return `${API_URL.replace(/\/$/, "")}/uploads/${clean.replace(/^\/+/, "")}`
+}
 
 export default function AcademiasPage() {
-  const [academias, setAcademias] = useState<any[]>([])
+  const [academias, setAcademias] = useState<Academia[]>([])
   const [currentSlide, setCurrentSlide] = useState(0)
   const autoPlayRef = useRef<number | null>(null)
-  const cardRefs = useRef<Array<HTMLDivElement | null>>([])
+  const cardRefs = useRef<Record<number, HTMLDivElement | null>>({})
 
   async function fetchAcademias() {
     try {
@@ -17,7 +51,7 @@ export default function AcademiasPage() {
       const data = await res.json()
       setAcademias(Array.isArray(data) ? data : [])
     } catch (err) {
-      console.error("Erro ao buscar academias", err)
+      console.error("Erro ao buscar academias:", err)
       setAcademias([])
     }
   }
@@ -26,22 +60,27 @@ export default function AcademiasPage() {
     fetchAcademias()
   }, [])
 
-  // --- Carousel logic ---
+  // ---------------- CAROUSEL ----------------
   const slides = academias.length
-    ? academias.map((item) => {
-      // Usando apenas imagem_principal - mais simples e consistente
-      const imageUrl = item.imagem_principal || null
-
-      return {
-          id: item.id,
-          title: item.nome,
-          subtitle: item.endereco,
-          image: imageUrl,
-      }
-    })
+    ? academias.map((item) => ({
+        id: item.id,
+        title: item.nome,
+        subtitle: item.endereco,
+        image: normalizeImageUrl(item.imagem_principal),
+      }))
     : [
-        { id: "placeholder-1", title: "Bem-vindo", subtitle: "Encontre sua academia", image: null },
-        { id: "placeholder-2", title: "Treine hoje", subtitle: "Procure perto de você", image: null },
+        {
+          id: "placeholder-1",
+          title: "Bem-vindo",
+          subtitle: "Encontre sua academia",
+          image: null,
+        },
+        {
+          id: "placeholder-2",
+          title: "Treine hoje",
+          subtitle: "Procure perto de você",
+          image: null,
+        },
       ]
 
   useEffect(() => {
@@ -49,6 +88,7 @@ export default function AcademiasPage() {
     autoPlayRef.current = window.setInterval(() => {
       setCurrentSlide((s) => (s + 1) % slides.length)
     }, 4000)
+
     return () => stopAutoPlay()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slides.length])
@@ -70,30 +110,26 @@ export default function AcademiasPage() {
     setCurrentSlide((s) => (s + 1) % slides.length)
   }
 
-  // --- Scroll animation for cards ---
+  // ------------- INTERSECTION OBSERVER -------------
   useEffect(() => {
     const obs = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          const el = entry.target as HTMLDivElement
           if (entry.isIntersecting) {
-            el.classList.add("is-visible")
+            ;(entry.target as HTMLDivElement).classList.add("is-visible")
           }
         })
       },
       { threshold: 0.12 }
     )
 
-    cardRefs.current.forEach((el) => {
-      if (el) obs.observe(el)
-    })
-
+    Object.values(cardRefs.current).forEach((el) => el && obs.observe(el))
     return () => obs.disconnect()
   }, [academias])
 
   return (
     <div className="w-full min-h-screen bg-slate-50 text-slate-900">
-      {/* Big carousel */}
+      {/* ---------------- CAROUSEL ---------------- */}
       <section className="w-full relative">
         <div className="w-full h-[56vh] md:h-[60vh] lg:h-[68vh] overflow-hidden relative">
           <div
@@ -106,88 +142,54 @@ export default function AcademiasPage() {
                   <img
                     src={s.image}
                     alt={s.title}
-                    className="w-full h-[56vh] md:h-[60vh] lg:h-[68vh] object-cover"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="w-full h-[56vh] md:h-[60vh] lg:h-[68vh] flex items-center justify-center bg-gradient-to-r from-slate-300 via-slate-200 to-slate-300">
-                    <div className="text-center">
-                      <h1 className="text-3xl md:text-5xl font-semibold">{s.title}</h1>
-                      <p className="mt-2 text-lg md:text-xl">{s.subtitle}</p>
-                    </div>
+                  <div className="w-full h-full flex items-center justify-center bg-slate-200">
+                    <h1 className="text-3xl font-semibold">{s.title}</h1>
                   </div>
                 )}
-                <div className="absolute left-6 bottom-8 bg-white/60 backdrop-blur-md rounded-md px-4 py-2">
-                  <h3 className="text-lg font-medium">{s.title}</h3>
-                  <p className="text-sm">{s.subtitle}</p>
-                </div>
               </div>
             ))}
           </div>
 
-          {/* Prev / Next */}
           <button
             onClick={prev}
-            aria-label="Anterior"
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 shadow rounded-full p-3 hover:scale-105 transition"
+            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-3"
           >
             ‹
           </button>
           <button
             onClick={next}
-            aria-label="Próximo"
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 shadow rounded-full p-3 hover:scale-105 transition"
+            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-3"
           >
             ›
           </button>
-
-          {/* Dots */}
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-6 flex gap-2">
-            {slides.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  stopAutoPlay()
-                  setCurrentSlide(i)
-                }}
-                className={`w-3 h-3 rounded-full transition-all ${
-                  i === currentSlide ? "scale-110 bg-white" : "bg-white/60"
-                }`}
-                aria-label={`Slide ${i + 1}`}
-              />
-            ))}
-          </div>
         </div>
       </section>
 
-      {/* Animated intro */}
-      <section className="max-w-6xl mx-auto px-4 py-8 md:py-12">
-        <div className="mt-10 bg-white rounded-2xl shadow p-6 md:p-10 transform -translate-y-10 md:-translate-y-12 opacity-0 animate-slide-up-once">
-          <h2 className="text-2xl md:text-3xl font-semibold">Academias perto de você</h2>
-          <p className="mt-2 text-sm text-slate-600">
-            Role para ver as academias — os cards vão aparecer com uma animação suave.
-          </p>
-        </div>
-      </section>
-
-      {/* Cards grid */}
+      {/* ---------------- GRID ---------------- */}
       <section className="max-w-6xl mx-auto px-4 pb-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {academias.map((item, idx) => {
-            // Usando apenas imagem_principal - mais simples e consistente
-            const imageUrl = item.imagem_principal || null
+          {academias.map((item) => {
+            const imageUrl = normalizeImageUrl(item.imagem_principal)
 
             return (
-              <Link href={`/academia/${item.id ?? idx}`} key={item.id ?? idx} className="block">
+              <Link href={`/academia/${item.id}`} key={item.id}>
                 <div
-                  ref={(el) => {
-                    cardRefs.current[idx] = el
-                  }}
-                  className="rounded-xl overflow-hidden bg-white shadow-sm border border-slate-100 transform opacity-0 translate-y-6 transition-all duration-600 ease-out hover:shadow-md focus:shadow-md focus:outline-none cursor-pointer"
-                  style={{ transitionTimingFunction: "cubic-bezier(.2,.9,.2,1)" }}
-                  tabIndex={0}
+                  ref={(el) => (cardRefs.current[item.id] = el)}
+                  className="rounded-xl overflow-hidden bg-white shadow-sm border opacity-0 translate-y-6 transition-all duration-500 hover:shadow-md cursor-pointer"
                 >
                   {imageUrl ? (
-                    <img src={imageUrl} alt={item.nome} className="w-full h-48 object-cover" />
+                    <img
+                      src={imageUrl}
+                      alt={item.nome}
+                      className="w-full h-48 object-cover"
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                    />
                   ) : (
                     <div className="w-full h-48 flex items-center justify-center bg-slate-100">
                       Sem imagem
@@ -196,8 +198,10 @@ export default function AcademiasPage() {
 
                   <div className="p-4">
                     <h3 className="text-lg font-medium">{item.nome}</h3>
-                    <p className="mt-1 text-sm text-slate-600">{item.endereco}</p>
-                    <p className="mt-2 font-semibold">Preço: {item.preco ?? "—"}</p>
+                    <p className="text-sm text-slate-600">{item.endereco}</p>
+                    <p className="mt-2 font-semibold">
+                      Preço: {item.preco ?? "—"}
+                    </p>
                   </div>
                 </div>
               </Link>
@@ -207,19 +211,6 @@ export default function AcademiasPage() {
       </section>
 
       <style jsx>{`
-        @keyframes slideUpOnce {
-          from {
-            transform: translateY(8px);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-        .animate-slide-up-once {
-          animation: slideUpOnce 700ms ease-out forwards;
-        }
         .is-visible {
           opacity: 1 !important;
           transform: translateY(0) !important;

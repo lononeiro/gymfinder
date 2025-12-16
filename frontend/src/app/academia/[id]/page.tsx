@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import CommentForm from "@/components/CommentForm"
+import CommentForm from "@/components/CommentForm";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://gymfinder-1.onrender.com";
 
@@ -14,71 +14,59 @@ export default function AcademiaDetalhePage() {
   const [comentarios, setComentarios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [novoComentario, setNovoComentario] = useState("");
-  const [sending, setSending] = useState(false);
 
-  const usuarioNome =
-    typeof window !== "undefined" ? localStorage.getItem("usuario_nome") : null;
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : "";
+  // Normaliza o valor que pode ser: string (nome do arquivo ou URL) ou objeto { url, nome_arquivo }
+  function normalizeImage(item: any): string | null {
+    if (!item) return null;
 
-  // Buscar dados da academia + comentários com nome do usuário
-  async function fetchData() {
-    try {
-      // Buscar academia
-      const aca = await fetch(`${API_URL}/academias`);
-      const lista = await aca.json();
-      const selecionada = lista.find((x: any) => String(x.id) === String(id));
-      setAcademia(selecionada || null);
-
-      // Buscar comentários
-      const com = await fetch(`${API_URL}/academia/${id}/comentario`);
-      const comData = await com.json();
-      const comentariosBrutos = comData.comentarios || [];
-
-      // Para cada comentário, buscar nome do usuário
-      const comentariosComUsuario = await Promise.all(
-        comentariosBrutos.map(async (c: any) => {
-          try {
-            const resUser = await fetch(
-              `${API_URL}/comentario/${c.id}/usuario`
-            );
-
-            const dadosUser = await resUser.json();
-
-            return {
-              ...c,
-              usuario_nome: dadosUser?.nome || "Usuário",
-            };
-          } catch {
-            return { ...c, usuario_nome: "Usuário" };
-          }
-        })
-      );
-
-      setComentarios(comentariosComUsuario);
-    } catch (e) {
-      console.error(e);
+    // extrai o campo que pode ser string ou objeto
+    let value: string | undefined | null;
+    if (typeof item === "string") {
+      value = item;
+    } else if (typeof item === "object") {
+      value = item.url || item.nome_arquivo || null;
     }
 
-    setLoading(false);
+    if (!value) return null;
+
+    // se já for URL absoluta, retorna direto
+    if (value.startsWith("http://") || value.startsWith("https://")) {
+      return value;
+    }
+
+    // caso seja apenas nome do arquivo (local), prefixa com API_URL/uploads
+    return `${API_URL.replace(/\/$/, "")}/uploads/${value.replace(/^\/+/, "")}`;
   }
 
   useEffect(() => {
-    if (id) fetchData();
-  }, [id]);
+    if (!id) return;
 
-  // comentário agora é tratado pelo CommentForm component
+    setLoading(true);
+    Promise.all([
+      fetch(`${API_URL}/academias/${id}`).then((r) => r.json()),
+      fetch(`${API_URL}/academias/${id}/comentarios`).then((r) => r.json()).catch(() => []),
+    ])
+      .then(([acadData, comms]) => {
+        setAcademia(acadData);
+        setComentarios(Array.isArray(comms) ? comms : []);
+      })
+      .catch((err) => {
+        console.error("Erro ao carregar academia:", err);
+        setAcademia(null);
+        setComentarios([]);
+      })
+      .finally(() => setLoading(false));
+  }, [id]);
 
   if (loading) return <div className="p-6">Carregando...</div>;
   if (!academia) return <div className="p-6">Academia não encontrada.</div>;
 
+  // monta array de imagens normalizadas
   const imagens =
     academia.imagens && academia.imagens.length > 0
-      ? academia.imagens.map((img: any) =>
-          typeof img === "string"
-            ? `${API_URL}/uploads/${img}`
-            : `${API_URL}/uploads/${img.url || img.nome_arquivo}`
-        )
+      ? academia.imagens
+          .map((img: any) => normalizeImage(img))
+          .filter((u: any) => !!u)
       : [];
 
   return (
@@ -90,26 +78,26 @@ export default function AcademiaDetalhePage() {
               <img
                 key={i}
                 src={src}
-                className="w-80 h-72 object-cover rounded-xl flex-shrink-0"
-                alt={`Imagem ${i + 1}`}
+                alt={`${academia.nome} - ${i + 1}`}
+                className="w-full max-w-[600px] h-auto object-cover rounded"
+                loading="lazy"
+                referrerPolicy="no-referrer"
               />
             ))}
           </div>
         ) : (
-          <div className="w-full h-72 bg-slate-200 flex items-center justify-center">
-            Sem imagem
+          <div className="w-full h-48 flex items-center justify-center bg-slate-100">
+            Sem imagens
           </div>
         )}
 
         <div className="p-6">
-          <h1 className="text-3xl font-semibold">{academia.nome}</h1>
-          <p className="mt-2 text-slate-700">{academia.endereco}</p>
+          <h1 className="text-2xl font-bold">{academia.nome}</h1>
+          <p className="mt-1 text-sm text-slate-600">{academia.endereco}</p>
           <p className="mt-3 font-medium">Preço: {academia.preco ?? "—"}</p>
 
           {academia.descricao && (
-            <p className="mt-4 text-slate-600 whitespace-pre-line">
-              {academia.descricao}
-            </p>
+            <p className="mt-4 text-slate-600 whitespace-pre-line">{academia.descricao}</p>
           )}
         </div>
       </div>
@@ -119,25 +107,23 @@ export default function AcademiaDetalhePage() {
         <h2 className="text-2xl font-semibold">Comentários</h2>
 
         <div className="mt-4 bg-white rounded-xl shadow p-4">
-          <CommentForm academiaId={String(id)} onSuccess={() => fetchData()} />
-        </div>
+          <CommentForm
+            academiaId={academia.id}
+            onSuccess={() => {
+              fetch(`${API_URL}/academias/${id}/comentarios`).then((r) => r.json()).then((comms) => {
+                setComentarios(Array.isArray(comms) ? comms : []);
+              });
+            }}
+          />
 
-        <div className="mt-6 space-y-4">
-          {comentarios.length === 0 && (
-            <p className="text-slate-500">Nenhum comentário ainda.</p>
-          )}
-
-          {comentarios.map((c, idx) => (
-            <div
-              key={c.id ?? idx}
-              className="bg-white rounded-xl shadow p-4"
-            >
-              <p className="text-slate-800">{c.texto}</p>
-              <p className="text-sm text-slate-500 mt-1">
-                Por {c.usuario_nome}
-              </p>
-            </div>
-          ))}
+          <div className="mt-6 space-y-3">
+            {comentarios.map((c: any, idx: number) => (
+              <div key={c.id ?? idx} className="bg-white rounded-xl shadow p-4">
+                <p className="text-slate-800">{c.texto}</p>
+                <p className="text-sm text-slate-500 mt-1">Por {c.usuario_nome}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
