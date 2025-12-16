@@ -39,7 +39,7 @@ func main() {
 
 	// 4) CORS
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "https://gymfinder-1.onrender.com", "https://gymfinder-nine.vercel.app", "https://s3.filebase.com", "https://ipfs.filebase.io"},
+		AllowedOrigins:   []string{"http://localhost:3000", "https://gymfinder-1.onrender.com", "https://gymfinder-nine.vercel.app", "https://s3.filebase.com", "https://ipfs.filebase.io", "https://gymfinder-cjbn6glzj-lononeiros-projects.vercel.app"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		AllowCredentials: true,
