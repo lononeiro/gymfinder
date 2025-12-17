@@ -94,15 +94,9 @@ func ListarComentarios(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := map[string]interface{}{
-		"comentarios": comentarios,
-	}
-
-	jsonData, _ := json.MarshalIndent(response, "", "  ")
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(jsonData)
+	json.NewEncoder(w).Encode(comentarios)
 }
 
 func SelecionarUsuarioComentario(w http.ResponseWriter, r *http.Request) {

@@ -135,9 +135,8 @@ export default function AcademiaDetalhePage() {
               fetch(`${API_URL}/academia/${id}/comentario`).then((r) => r.json()).then((comms) => {
                 setComentarios(Array.isArray(comms) ? comms : []);
               });
-            }}
+            }}            
           />
-
           <div className="mt-6 space-y-3">
             {comentarios.map((c: any, idx: number) => (
               <div key={c.id ?? idx} className="bg-white rounded-xl shadow p-4">

@@ -64,11 +64,19 @@ func EditarComentario(db *gorm.DB, id uint, comentario model.Comentario) error {
 
 func ListarComentariosPost(db *gorm.DB, academiaID uint) ([]model.Comentario, error) {
 	var comentarios []model.Comentario
-	err := db.Where("academia_id = ?", academiaID).Find(&comentarios).Error
+	err := db.Where("academia_id = ?", academiaID).Preload("Usuario").Find(&comentarios).Error
 	if err != nil {
 		fmt.Println("Erro ao listar comentários:", err)
 		return nil, err
 	}
+
+	// Define o nome do usuário para cada comentário
+	for i := range comentarios {
+		if comentarios[i].Usuario.Nome != "" {
+			comentarios[i].UsuarioNome = comentarios[i].Usuario.Nome
+		}
+	}
+
 	fmt.Printf("%d comentários encontrados para a academia ID %d\n", len(comentarios), academiaID)
 	return comentarios, nil
 }
